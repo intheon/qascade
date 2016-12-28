@@ -1,0 +1,11 @@
+a: b
+c: 12
+d: 50
+cfk-match-filename-1:
+     cfk-filename-wildcard: '*.m'
+     isMFile: true
+q:
+   - first
+   - second
+
+a: c
