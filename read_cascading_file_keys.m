@@ -1,5 +1,5 @@
-function fileKeys = read_cascading_file_keys(folder, parentKeys, fileMatcheDirectives, folderMatcheDirectives)
-fileKeys = containers.Map;
+function filekeys = read_cascading_file_keys(folder, parentKeys, fileMatcheDirectivesCell, rootFolder)
+filekeys = containers.Map;
 
 if exist('parentKeys', 'var')
     folderKeys = parentKeys;
@@ -7,24 +7,24 @@ else
     folderKeys = containers.Map;
 end;
 
-if ~exist('fileMatcheDirectives', 'var')
-    fileMatcheDirectives = containers.Map;
+if ~exist('fileMatcheDirectivesCell', 'var')
+    fileMatcheDirectivesCell = {}; % this is a cell array of Maps because there may be several match patterns, each adding a different key, e.g. one from a (matches) key and one from a (table)
 end;
 
-if ~exist('folderMatcheDirectives', 'var')
-    folderMatcheDirectives = containers.Map;
+% make sure that folder variable does not have a file separator (since we do not want double file
+% separators anywhere)
+if folder(end) == filesep
+    folder = folder(1:(end-1));
 end;
 
-
-
+if ~exist('rootFolder', 'var')
+    rootFolder = folder;
+end;
 
 manifestFileName = 'manifest.cfk.yaml';
-matchPatternFieldName = 'cfk-match-filename';
-matchPatternFileNameSubFieldName = 'cfk-filename';
-matchPatternFolderNameSubFieldName = 'cfk-foldername';
-matchPatternTableSubFieldName = 'cfk-table';
-
-listOfSubFieldNames = {matchPatternFileNameSubFieldName, matchPatternFolderNameSubFieldName, matchPatternTableSubFieldName};
+matchDirective = 'matches';
+tableDirective = 'table';
+noSubfolderDirective = 'no-subdir';
 
 % get the list of files and folders
 d = dir(folder);
@@ -35,6 +35,7 @@ subfolderMask = [d.isdir];
 subfolders = names(subfolderMask);
 files = names(~subfolderMask);
 
+onlyThisFolderKeys = containers.Map;
 
 % look for the manifest file in the folderm exlude it from the list of files, and process it.
 id = strcmp(files, manifestFileName);
@@ -46,36 +47,37 @@ if any(id)
     keys = newFolderKeys.keys;
     
     for i = 1:length(keys)
-        if isequal(strfind(keys{i}, matchPatternFieldName), 1)
-            
-            % match individual files
-            if isKey(newFolderKeys(keys{i}), matchPatternFileNameSubFieldName)
-                matchMap  = newFolderKeys(keys{i});
-                matchKeys = matchMap(matchPatternFileNameSubFieldName);
-                
-                % remove all directives
-                for j=1:length(listOfSubFieldNames)
-                    matchMap = matchMap.remmove(listOfSubFieldNames{j});
-                end;
-                
-                fileMatcheDirectives(matchKeys) = matchMap;
-            end;
-            
-            % match based on the containing folder
-            if isKey(newFolderKeys(keys{i}), matchPatternFolderNameSubFieldName)
-                matchMap  = newFolderKeys(keys{i});
-                matchKeys = matchMap(matchPatternFileNameSubFieldName);
-                
-                % remove all directives
-                for j=1:length(listOfSubFieldNames)
-                    matchMap = matchMap.remmove(listOfSubFieldNames{j});
-                end;
-                
-                folderMatcheDirectives(matchKeys) = matchMap;
-            end;
-            
-            % process inline TSV table 
-            
+        if ~isempty(regexp(keys{i}, ['^(' matchDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with [, $ indicates that it has to end with ]
+            matchPattern = keys{i}((length(matchDirective)+3):(end-1));
+            fileMatcheDirectivesCell{end+1} = containers.Map;
+            fileMatcheDirectivesCell{end}(matchPattern) = newFolderKeys(keys{i});                                 
+        elseif ~isempty(regexp(keys{i}, ['^(' tableDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with [, $ indicates that it has to end with ]
+             % table name is not important            
+             
+             % write to a temporary file and use readtable to import as tsv file
+             tempFileName = [tempname '.txt'];
+             fid = fopen(tempFileName, 'w');
+             fprintf(fid, newFolderKeys(keys{i}));
+             fclose(fid);
+             
+             tble = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',true);
+             delete(tempFileName);
+             
+             if strcmp(tble.Properties.VariableDescriptions{1}, 'Original column heading: ''<matches>''')  % strcmp(tble.VariableNames{1}, 'x_matches_')
+                 for j=1:height(tble)
+                     map = containers.Map;
+                     for k=2:width(tble) % extract key:value pairs from the tabel, into a map,then assign that map to the match pattern in fileMatcheDirectives.
+                         map(tble.Properties.VariableNames{k}) = tble{j,k};
+                     end;
+                     
+                     fileMatcheDirectivesCell{end+1} = containers.Map;
+                     fileMatcheDirectivesCell{end}(cell2mat(tble{j, 'x_matches_'})) = map;
+                 end;
+             else
+                 error('The the table specified in %s does not have (matches) as its first column header', keys{i});
+             end
+        elseif ~isempty(regexp(keys{i}, ['^(' noSubfolderDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with [, $ indicates that it has to end with ]
+            onlyThisFolderKeys = [onlyThisFolderKeys; newFolderKeys(keys{i})];
         else
             folderKeys(keys{i}) = newFolderKeys(keys{i});
         end;
@@ -84,28 +86,40 @@ end;
 
 % add file keys for the current folder
 for i=1:length(files)
-    fileKeys([folder filesep files{i}]) = folderKeys;
+    filekeys([folder filesep files{i}]) = [folderKeys; onlyThisFolderKeys];
 end;
 
+
 % apply file match directives (overwrite keys for files matching certain wildcard expressions)
-keys = fileMatcheDirectives.keys;
-for i=1:length(keys)
-    matchIds = find(~cellfun(@isempty, regexp(files,regexptranslate('wildcard', keys{i}))));
-    
-    % overwrite keys when a file name matched wildcard
-    for j=1:length(matchIds)
-        fileKeys([folder filesep files{matchIds(j)}]) = [fileKeys([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
+for k=1:length(fileMatcheDirectivesCell)
+    keys = fileMatcheDirectivesCell{k}.keys;
+    for i=1:length(keys)
+        
+        % create full paths but exclude the root folder so it is not used in pattern matching (this
+        % makes it portable)
+        fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);
+        
+        matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % math the full file path, including the name. This alows
+        
+        % overwrite keys when a file name matched wildcard
+        for j=1:length(matchIds)
+            filekeys([folder filesep files{matchIds(j)}]) = [filekeys([folder filesep files{j}]); fileMatcheDirectivesCell{k}(keys{i})];
+        end;
+        
     end;
-    
 end;
 
 % add file keys for the subfolder
 for i=1:length(subfolders)
-    % this is because container.Map is a handle class, hence 
+    % we make new maps here this container.Map is a handle class and
     % sending it inside a function can change its value
-    dummyContainer = containers.Map(folderKeys.keys, folderKeys.values);
+   
+    copyOfFileMatcheDirectivesCell = cell(length(fileMatcheDirectivesCell), 1);
+    for j=1:length(fileMatcheDirectivesCell)
+        copyOfFileMatcheDirectivesCell{j} = containers.Map(fileMatcheDirectivesCell{j}.keys, fileMatcheDirectivesCell{j}.values);
+    end;
     
-    newFileKeys = read_cascading_file_keys([folder filesep subfolders{i}], dummyContainer, fileMatcheDirectives, folderMatcheDirectives);
-    fileKeys = [fileKeys; newFileKeys];
+    newFileKeys = read_cascading_file_keys([folder filesep subfolders{i}], containers.Map(folderKeys.keys, folderKeys.values), copyOfFileMatcheDirectivesCell, rootFolder);
+    filekeys = [filekeys; newFileKeys];
 end;
 end

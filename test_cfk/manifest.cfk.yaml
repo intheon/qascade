@@ -1,11 +1,19 @@
 a: b
 c: 12
 d: 50
-cfk-match-filename-1:
-     cfk-filename-wildcard: '*.m'
-     isMFile: true
+(matches *.m):
+   isMFile: true
 q:
    - first
    - second
 
 a: c
+
+(table): |
+       <matches>	key1	key2
+       *.txt	120	value2
+       *.m	10000	value3
+
+(no-subdir):
+  onlytopFolder: true
+  secondFolderKey: 2
