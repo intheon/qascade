@@ -17,3 +17,5 @@ a: c
 (no-subdir):
   onlytopFolder: true
   secondFolderKey: 2
+  (matches *.):
+     isMFileFromOnlyTop: true

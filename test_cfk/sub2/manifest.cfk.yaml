@@ -1,3 +1,7 @@
 bb: cc
 c: 5000
 d: test
+
+(no-subdir):
+  onlysub2Folder: true
+  secondsub2FolderKey: 2
