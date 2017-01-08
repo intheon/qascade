@@ -9,8 +9,16 @@ q:
 
 a: c
 
+z.y.z: 99
+
+s:
+  field1: 1
+  field2: 2
+  field3: 3
+  field4: 4
+
 (table): |
-       <matches>	key1	key2
+       (matches)	key1	key2
        *.txt	120	value2
        *.m	10000	value3
 
@@ -19,3 +27,7 @@ a: c
   secondFolderKey: 2
   (matches *.):
      isMFileFromOnlyTop: true
+  (table): |
+       (matches)	folderonlytablekey1	folderonlytablekey2 
+       *.txt	99	folderonlyValue2
+       *.m	10000	folderonlyValue3

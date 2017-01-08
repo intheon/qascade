@@ -1,8 +1,8 @@
-function filekeys = read_cascading_file_keys(folder, parentKeys, fileMatcheDirectives, rootFolder)
-filekeys = containers.Map;
+function filesMapToKeyValues = read_Qcascading_file_keys(folder, parentKeys, fileMatcheDirectives, rootFolder)
+filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
 
 if exist('parentKeys', 'var')
-    folderKeys = parentKeys;
+    folderKeys = parentKeys; % folder keys are the (key:value) pairs that are common to all files in the folder.
 else
     folderKeys = containers.Map;
 end;
@@ -43,7 +43,7 @@ else
     newFolderKeys = containers.Map;
 end;
 
-[filekeys, folderKeys, fileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, newFolderKeys, filekeys, folderKeys, fileMatcheDirectives);
+[filesMapToKeyValues, folderKeys, fileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, newFolderKeys, filesMapToKeyValues, folderKeys, fileMatcheDirectives);
 
 % add file keys for the subfolder
 for i=1:length(subfolders)
@@ -51,11 +51,11 @@ for i=1:length(subfolders)
     % sending it inside a function can change its value
     
     newFileKeys = read_cascading_file_keys([folder filesep subfolders{i}], copyMap(folderKeys), fileMatcheDirectives, rootFolder);
-    filekeys = [filekeys; newFileKeys];
+    filesMapToKeyValues = [filesMapToKeyValues; newFileKeys];
 end;
 end
 
-function [filekeys, folderKeys, fileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, newFolderKeys, filekeys, folderKeys, fileMatcheDirectives)
+function [filesMapToKeyValues, folderKeys, fileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, newFolderKeys, filesMapToKeyValues, folderKeys, fileMatcheDirectives)
 
 matchDirective = 'matches';
 tableDirective = 'table';
@@ -83,7 +83,10 @@ for i = 1:length(keys)
         fprintf(fid, newFolderKeys(keys{i}));
         fclose(fid);
         
+        warning('off', 'MATLAB:table:ModifiedVarnames');
         tble = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',true);
+        warning('on', 'MATLAB:table:ModifiedVarnames');
+        
         delete(tempFileName);
         
         if strcmp(tble.Properties.VariableDescriptions{1}, 'Original column heading: ''<matches>''')  % strcmp(tble.VariableNames{1}, 'x_matches_')
@@ -112,13 +115,13 @@ for i = 1:length(keys)
 end
 
 if ~isempty(onlyThisFolderKeys)
-    [onlyThisFolderFilekeys, onlyThisFolderFolderKeys, folderOnlyFileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, onlyThisFolderKeys, copyMap(filekeys)...
+    [onlyThisFolderFilekeys, onlyThisFolderFolderKeys, folderOnlyFileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, onlyThisFolderKeys, copyMap(filesMapToKeyValues)...
         , copyMap(folderKeys), copyMap(fileMatcheDirectives));
 end;
 
 % add file keys for the current folder
 for i=1:length(files)
-    filekeys([folder filesep files{i}]) = folderKeys;
+    filesMapToKeyValues([folder filesep files{i}]) = folderKeys;
 end;
 
 % apply file match directives (overwrite keys for files matching certain wildcard expressions)
@@ -133,14 +136,18 @@ for i=1:length(keys)
     
     % overwrite keys when a file name matched wildcard
     for j=1:length(matchIds)
-        filekeys([folder filesep files{matchIds(j)}]) = [filekeys([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
+        filesMapToKeyValues([folder filesep files{matchIds(j)}]) = [filesMapToKeyValues([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
     end;
     
 end;
 
-% add folder-only filekeys last so they take precedence over matches and other keys
-for
-
+% add folder-only filesMapToKeyValues last so they take precedence over matches and other keys
+if exist('onlyThisFolderFilekeys', 'var')
+    keys = onlyThisFolderFilekeys.keys;
+    for i=1:length(keys)
+        filesMapToKeyValues(keys{i}) = [filesMapToKeyValues(keys{i}); onlyThisFolderFilekeys(keys{i})];
+    end;
+end;
 end
 
 function newMap = copyMap(map)
