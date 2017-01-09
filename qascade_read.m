@@ -1,5 +1,9 @@
-function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileMatcheDirectives, rootFolder)
+function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileMatcheDirectives, rootFolder, issues)
 filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
+
+if ~exist('issues', 'var')
+    issues = Issues;
+end;
 
 if exist('parentKeyValues', 'var')
     folderKeys = parentKeyValues; % folder keys are the (key:value) pairs that are common to all files in the folder.
@@ -43,37 +47,31 @@ else
     newFolderKeyValues = newEmptyMap;
 end;
 
-[filesMapToKeyValues, folderKeys, fileMatcheDirectives, onlyThisFolderKeys, issues] = process_manifest_keys(folder, rootFolder, files, newFolderKeyValues, filesMapToKeyValues,...
- folderKeys, fileMatcheDirectives, manifestFileName);
+[filesMapToKeyValues, folderKeys, fileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, newFolderKeyValues, filesMapToKeyValues,...
+ folderKeys, fileMatcheDirectives, manifestFileName, issues);
 
 % add file keys for the subfolder
 for i=1:length(subfolders)
     % copyMap is because container.Map is a handle class, hence
     % sending it inside a function can change its value
     
-    [newFileKeys, newIssues] = qascade_read([folder filesep subfolders{i}], copyMap(folderKeys), fileMatcheDirectives, rootFolder);
+    newFileKeys = qascade_read([folder filesep subfolders{i}], copyMap(folderKeys), fileMatcheDirectives, rootFolder, issues);
     filesMapToKeyValues = [filesMapToKeyValues; newFileKeys];
-    issues = cat(1, vec(issues), vec(newIssues));
 end;
 
-if nargin == 1 && length(issues) > 0% the top level
-    fprintf('\nThere are some issues:\n\n');
-    for i=1:length(issues)
-        fprintf('%d-%s\n\n', i, strjoin_adjoiner_first(sprintf('\n'), linewrap(issues{i},100)));
-    end;
-    fprintf('\n');
+if nargin == 1 && issues.existsAny
+    issues.show;
 end
 end
 %%
 
 
-function [filesMapToKeyValues, folderKeyValues, fileMatcheDirectives, onlyThisFolderKeys, issues] = process_manifest_keys(folder, rootFolder, files, ...
-newFolderKeyValues, filesMapToKeyValues, folderKeyValues, fileMatcheDirectives, manifestFileName)
+function [filesMapToKeyValues, folderKeyValues, fileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, ...
+newFolderKeyValues, filesMapToKeyValues, folderKeyValues, fileMatcheDirectives, manifestFileName, issues)
 
 matchDirective = 'matches';
 tableDirective = 'table';
 noSubfolderDirective = 'no-subdir';
-issues = {};
 
 onlyThisFolderKeys = newEmptyMap;
 
@@ -100,14 +98,23 @@ for i = 1:length(keys)
         try
             warning('off', 'MATLAB:table:ModifiedVarnames');
             tble = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',true);
+            tbleNoVariableNames = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',false); % used to  read unmodified variable names
             warning('on', 'MATLAB:table:ModifiedVarnames');
             delete(tempFileName);
-            
-            if strcmp(tble.Properties.VariableDescriptions{1}, 'Original column heading: ''(matches)''')  % strcmp(tble.VariableNames{1}, 'x_matches_')
+            keyNames = tbleNoVariableNames{1,:};
+            if strcmp(keyNames{1}, '(matches)') 
                 for j=1:height(tble)
                     map = newEmptyMap;
+                    
                     for k=2:width(tble) % extract key:value pairs from the tabel, into a map,then assign that map to the match pattern in fileMatcheDirectives.
-                        map(tble.Properties.VariableNames{k}) = tble{j,k};
+                        value = tble{j,k};
+                        switch value % because outside of the table, YAML reader converts 'true' to 1 and 'false' to 0
+                            case 'true'
+                                value = 1;
+                            case 'false'
+                                value = 0;
+                        end;
+                        map(keyNames{k}) = value;
                     end;
                     matchPattern = cell2mat(tble{j, 'x_matches_'});
                     if isKey(fileMatcheDirectives, matchPattern)
@@ -118,28 +125,21 @@ for i = 1:length(keys)
                     
                 end;
             else
-                issues{end+1}  = sprintf('Error: The the table specified in key ''%s'' of file %s does not have ''(matches)'' as its first column header.', keys{i}, [folder filesep manifestFileName]);
+                issues.addError(sprintf('Error: The the table specified in key ''%s'' of file %s does not have ''(matches)'' as its first column header.', keys{i}, [folder filesep manifestFileName]));
             end
         catch e
-            issues{end+1}  = sprintf('Error: The the table specified in key ''%s'' of file %s is malformed (is not tab-separated and/or have a different number of columns at different rows).', keys{i}, [folder filesep manifestFileName]);
+            issues.addError(sprintf('The the table specified in key ''%s'' of file %s is malformed (is not tab-separated and/or have a different number of columns at different rows).', keys{i}, [folder filesep manifestFileName]));
         end;
     elseif ~isempty(regexp(keys{i}, ['^(' noSubfolderDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with [, $ indicates that it has to end with ]
         onlyThisFolderKeys = newFolderKeyValues(keys{i});
-    elseif any(keys{i} == '.') % the key contains one or more dots, indicating that it could be a subfield overwrite directive
-        parts = strsplit(keys{i}, '.');
-        [newMap, newIssues] = nestedKeyOverwrite(folderKeyValues, parts, newFolderKeyValues(keys{i}), parts(1), [folder filesep manifestFileName]);
-        folderKeyValues = [folderKeyValues; newMap];
-        issues = cat(1, vec(issues), vec(newIssues));
-    else
-        folderKeyValues(keys{i}) = newFolderKeyValues(keys{i});
-    end;
-    
+    else        
+        folderKeyValues = addExtendedKeyToMap(folderKeyValues, keys{i}, newFolderKeyValues(keys{i}), [folder filesep manifestFileName], issues);
+    end;    
 end
 
 if ~isempty(onlyThisFolderKeys)
-    [onlyThisFolderFilekeys, onlyThisFolderFolderKeys, folderOnlyFileMatcheDirectives, onlyThisFolderKeys, newIssues] = process_manifest_keys(folder, rootFolder, files, onlyThisFolderKeys, copyMap(filesMapToKeyValues)...
-        , copyMap(folderKeyValues), copyMap(fileMatcheDirectives), manifestFileName);
-    issues = cat(1, vec(issues), vec(newIssues));
+    [onlyThisFolderFilekeys, onlyThisFolderFolderKeys, folderOnlyFileMatcheDirectives, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, onlyThisFolderKeys, copyMap(filesMapToKeyValues)...
+        , copyMap(folderKeyValues), copyMap(fileMatcheDirectives), manifestFileName, issues);
 end;
 
 % add file keys for the current folder
@@ -159,7 +159,9 @@ for i=1:length(keys)
     
     % overwrite keys when a file name matched wildcard
     for j=1:length(matchIds)
-        filesMapToKeyValues([folder filesep files{matchIds(j)}]) = [filesMapToKeyValues([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
+        % filesMapToKeyValues([folder filesep files{matchIds(j)}]) = [filesMapToKeyValues([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
+        filesMapToKeyValues([folder filesep files{matchIds(j)}]) = addExtendedMapToMap(filesMapToKeyValues([folder filesep files{matchIds(j)}]), fileMatcheDirectives(keys{i}),...
+            [folder filesep manifestFileName], issues);
     end;
     
 end;
@@ -175,21 +177,28 @@ end
 
 %%
 
-function issues = addExtendedKeyToMap(map, key, value, manifestFile)
+function map = addExtendedMapToMap(map, newMap, manifestFile, issues)
+keys = newMap.keys;
+for i =1:length(keys)
+    map = addExtendedKeyToMap(map, keys{i}, newMap(keys{i}), manifestFile, issues);
+end;
+end
+
+%%
+function map = addExtendedKeyToMap(map, key, value, manifestFile, issues)
 % adds a (key:value) pair to the map, while interpreting key.field.field.. diectives.
 
 if any(key == '.') % the key contains one or more dots, indicating that it could be a subfield overwrite directive
     parts = strsplit(key, '.');
-    [newMap, newIssues] = nestedKeyOverwrite(map, parts, value, parts(1), manifestFile);
-    map = [map; newMap];
-    issues = cat(1, vec(issues), vec(newIssues));
+    newMap = nestedKeyOverwrite(map, parts, value, parts(1), manifestFile, issues);
+    map = [map; newMap];   
 else
     map(key) = value;
 end;
 end
 
 %%
-function [newMap, issues] = nestedKeyOverwrite(map, parts, value, partsTravelled, manifestFile)
+function newMap = nestedKeyOverwrite(map, parts, value, partsTravelled, manifestFile, issues)
 % newMap = nestedKeyOverwrite(map, parts)
 % overwrites keys specied in 'parts' in the (nested) map.
 % If keys are not present at a level, a map is created at that level (equates to creating a MATLAB
@@ -205,9 +214,6 @@ keyExists = isKey(map, parts{1});
 
 newMap = copyMap(map);
 
-newWarningCell = {};
-issues = {};
-
 if lastKey && keyExists
     newMap(parts{1}) = value;
 elseif lastKey && ~keyExists
@@ -216,17 +222,15 @@ elseif ~lastKey && keyExists
     partsTravelled{end+1} = parts{2};
     nextLevel = map(parts{1});
     if isa(nextLevel, 'containers.Map')
-        [newMap(parts{1}), newWarningCell] = nestedKeyOverwrite(nextLevel, parts(2:end), value, partsTravelled, manifestFile);
+        newMap(parts{1}) = nestedKeyOverwrite(nextLevel, parts(2:end), value, partsTravelled, manifestFile, issues);
     else
-        issues{end+1}  = sprintf('Warning: in file %s: ''%s'' overwrite cannot be applied because ''%s'' (the parent key) is not a structure (multi-field entity).', manifestFile,...
-            strjoin_adjoiner_first('.', partsTravelled), strjoin_adjoiner_first('.', partsTravelled(1:end-1)));
+        issues.addWarning(sprintf('In file %s: ''%s'' overwrite cannot be applied because ''%s'' (the parent key) is not a structure (multi-field entity).', manifestFile,...
+            strjoin_adjoiner_first('.', partsTravelled), strjoin_adjoiner_first('.', partsTravelled(1:end-1))));
     end;
 elseif ~lastKey && ~keyExists
     partsTravelled{end+1} = parts{2};
-    [newMap(parts{1}), newWarningCell] = nestedKeyOverwrite(newEmptyMap, parts(2:end), value, partsTravelled, manifestFile);
+    newMap(parts{1})= nestedKeyOverwrite(newEmptyMap, parts(2:end), value, partsTravelled, manifestFile, issues);
 end;
-
-issues = cat(1, vec(issues), vec(newWarningCell));
 
 end
 
