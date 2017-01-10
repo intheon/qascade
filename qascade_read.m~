@@ -1,4 +1,4 @@
-function [filesMapToKeyValues, issues] = qascade_read(folder, issues, parentKeyValues, fileMatcheDirectives, rootFolder)
+function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileMatcheDirectives, rootFolder, issues)
 filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
 
 if ~exist('issues', 'var')
@@ -55,7 +55,7 @@ for i=1:length(subfolders)
     % copyMap is because container.Map is a handle class, hence
     % sending it inside a function can change its value
     
-    newFileKeys = qascade_read([folder filesep subfolders{i}], issues, copyMap(folderKeys), fileMatcheDirectives, rootFolder);
+    newFileKeys = qascade_read([folder filesep subfolders{i}], copyMap(folderKeys), fileMatcheDirectives, rootFolder, issues);
     filesMapToKeyValues = [filesMapToKeyValues; newFileKeys];
 end;
 
@@ -72,7 +72,6 @@ newFolderKeyValues, filesMapToKeyValues, folderKeyValues, fileMatcheDirectives, 
 matchDirective = 'matches';
 tableDirective = 'table';
 noSubfolderDirective = 'no-subdir';
-issues = {};
 
 onlyThisFolderKeys = newEmptyMap;
 
@@ -99,14 +98,25 @@ for i = 1:length(keys)
         try
             warning('off', 'MATLAB:table:ModifiedVarnames');
             tble = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',true);
+            tbleNoVariableNames = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',false); % used to  read unmodified variable names
             warning('on', 'MATLAB:table:ModifiedVarnames');
             delete(tempFileName);
-            
-            if strcmp(tble.Properties.VariableDescriptions{1}, 'Original column heading: ''(matches)''')  % strcmp(tble.VariableNames{1}, 'x_matches_')
+            keyNames = tbleNoVariableNames{1,:};
+            if strcmp(keyNames{1}, '(matches)') 
                 for j=1:height(tble)
                     map = newEmptyMap;
+                    
                     for k=2:width(tble) % extract key:value pairs from the tabel, into a map,then assign that map to the match pattern in fileMatcheDirectives.
-                        map(tble.Properties.VariableNames{k}) = tble{j,k};
+                        value = tble{j,k};
+                        if ischar(value)
+                            switch value % because outside of the table, YAML reader converts 'true' to 1 and 'false' to 0
+                                case 'true'
+                                    value = 1;
+                                case 'false'
+                                    value = 0;
+                            end;
+                        end;
+                        map(keyNames{k}) = value;
                     end;
                     matchPattern = cell2mat(tble{j, 'x_matches_'});
                     if isKey(fileMatcheDirectives, matchPattern)
@@ -120,7 +130,7 @@ for i = 1:length(keys)
                 issues.addError(sprintf('Error: The the table specified in key ''%s'' of file %s does not have ''(matches)'' as its first column header.', keys{i}, [folder filesep manifestFileName]));
             end
         catch e
-            issues.addError(sprintf('Error: The the table specified in key ''%s'' of file %s is malformed (is not tab-separated and/or have a different number of columns at different rows).', keys{i}, [folder filesep manifestFileName]));
+            issues.addError(sprintf('The the table specified in key ''%s'' of file %s is malformed (is not tab-separated and/or have a different number of columns at different rows).', keys{i}, [folder filesep manifestFileName]));
         end;
     elseif ~isempty(regexp(keys{i}, ['^(' noSubfolderDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with [, $ indicates that it has to end with ]
         onlyThisFolderKeys = newFolderKeyValues(keys{i});
@@ -145,13 +155,23 @@ for i=1:length(keys)
     
     % create full paths but exclude the root folder so it is not used in pattern matching (this
     % makes the container portable)
-    fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);
+%     fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);    
+%     matchIds_old = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
+%     
+% unclear whether relative folder matching works
+    fullPaths = strcat([folder filesep], files);
+    [list, isDir] = glob([folder filesep keys{i}]);
+    matchIds = ismember(fullPaths, list(~isDir));
+    matchedFolders = list(isDir);
+   
     
-    matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name. This alows
+   % assert(isequal(matchIds_old, matchIds));
     
     % overwrite keys when a file name matched wildcard
     for j=1:length(matchIds)
-        filesMapToKeyValues([folder filesep files{matchIds(j)}]) = [filesMapToKeyValues([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
+        % filesMapToKeyValues([folder filesep files{matchIds(j)}]) = [filesMapToKeyValues([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
+        filesMapToKeyValues([folder filesep files{matchIds(j)}]) = addExtendedMapToMap(filesMapToKeyValues([folder filesep files{matchIds(j)}]), fileMatcheDirectives(keys{i}),...
+            [folder filesep manifestFileName], issues);
     end;
     
 end;
@@ -165,7 +185,6 @@ if exist('onlyThisFolderFilekeys', 'var')
 end;
 end
 
-%%
 
 function map = addExtendedMapToMap(map, newMap, manifestFile, issues)
 keys = newMap.keys;
@@ -212,9 +231,9 @@ elseif ~lastKey && keyExists
     partsTravelled{end+1} = parts{2};
     nextLevel = map(parts{1});
     if isa(nextLevel, 'containers.Map')
-        [newMap(parts{1}), newWarningCell] = nestedKeyOverwrite(nextLevel, parts(2:end), value, partsTravelled, manifestFile, issues);
+        newMap(parts{1}) = nestedKeyOverwrite(nextLevel, parts(2:end), value, partsTravelled, manifestFile, issues);
     else
-        issues.addWarning(sprintf('Warning: in file %s: ''%s'' overwrite cannot be applied because ''%s'' (the parent key) is not a structure (multi-field entity).', manifestFile,...
+        issues.addWarning(sprintf('In file %s: ''%s'' overwrite cannot be applied because ''%s'' (the parent key) is not a structure (multi-field entity).', manifestFile,...
             strjoin_adjoiner_first('.', partsTravelled), strjoin_adjoiner_first('.', partsTravelled(1:end-1))));
     end;
 elseif ~lastKey && ~keyExists

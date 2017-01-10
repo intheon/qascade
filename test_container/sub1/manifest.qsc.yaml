@@ -6,7 +6,7 @@ s.field3: sometext
 s.field4.subfield: value
 q.newfield: 1
 
-(matches *.):
+(matches *.m):
      isMFileFromSubFolder: true
 
 (table): |

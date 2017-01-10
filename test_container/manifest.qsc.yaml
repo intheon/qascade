@@ -3,6 +3,10 @@ c: 12
 d: 50
 (matches *.m):
    isMFile: true
+
+(matches su*/):
+   isUnderSuFolder: true
+
 q:
    - first
    - second
@@ -25,7 +29,7 @@ s:
 (no-subdir):
   onlytopFolder: true
   secondFolderKey: 2
-  (matches *.):
+  (matches *.m):
      isMFileFromOnlyTop: true
   (table): |
        (matches)	folderonlytablekey1	folderonlytablekey2 
