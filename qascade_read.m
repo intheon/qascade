@@ -1,6 +1,10 @@
 function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileMatcheDirectives, rootFolder, issues)
 filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
 
+if ~exist(folder, 'dir')
+    error('Input folder does not exist');
+end;
+
 if ~exist('issues', 'var')
     issues = Issues;
 end;
@@ -155,22 +159,22 @@ for i=1:length(keys)
     
     % create full paths but exclude the root folder so it is not used in pattern matching (this
     % makes the container portable)
-    fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);    
-    matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
-%     
+   % fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);    
+   % matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
+     
   % unclear whether relative folder matching works
-%     fullPaths = strcat([folder filesep], files);
-%     if keys{i}(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
-%         [list, isDir] = glob([rootFolder filesep keys{i}]);
-%     else % if it starts with / then it is relative to the manifest folder
-%         [list, isDir] = glob([folder filesep keys{i}]);
-%     end;
-%     matchIds = ismember(fullPaths, list(~isDir));
-%     
-%     if any(strcmp(folder, list(isDir))) || any(strcmp([folder filesep], list(isDir)))
-%         matchIds(:) = true;
-%     end;
-%     matchIds = find(matchIds);
+    fullPaths = strcat([folder filesep], files);
+    if keys{i}(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
+        [list, isDir] = glob([rootFolder filesep '**' keys{i}]);
+    else % if it starts with / then it is relative to the manifest folder
+        [list, isDir] = glob([folder filesep keys{i}]);
+    end;
+    matchIds = ismember(fullPaths, list(~isDir));
+    
+    if any(strcmp(folder, list(isDir))) || any(strcmp([folder filesep], list(isDir)))
+        matchIds(:) = true;
+    end;
+    matchIds = find(matchIds);
    % assert(isequal(matchIds_old, matchIds));
     
     % overwrite keys when a file name matched wildcard

@@ -1,10 +1,10 @@
-aa: bb
-c: 1000
+sub1_aa: bb
+common_c: common_c_overwrite
 s.field1: 
    subfield: 9999
 s.field3: sometext
 s.field4.subfield: value
-q.newfield: 1
+common_array.newfield: 1
 
 (matches *.m):
      isMFileFromSubFolder: true

@@ -1,6 +1,6 @@
-bb: cc
-c: 5000
-d: test
+sub2_bb: cc
+common_c: 5000
+common_d: test
 
 (no-subdir):
   onlysub2Folder: true

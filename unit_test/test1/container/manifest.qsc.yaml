@@ -1,6 +1,6 @@
-a: b
-c: 12
-d: 50
+common_a: b
+common_c: 12
+common_d: 50
 
 (matches *.m):
    isMFile: true
@@ -9,13 +9,19 @@ d: 50
    istxtFile: true
 
 (matches su*/):
-   isUnderSuFolder: true
+   isDirectlyUnderSuFolder: true
 
-q:
+(matches su*/**):
+   isAnywhereUnderSuFolder: true
+
+(matches group_*/):
+   isUnderGroupFolder: true
+
+common_array:
    - first
    - second
 
-a: c
+common_a: c
 
 z.y.z: 99
 
