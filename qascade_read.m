@@ -155,28 +155,31 @@ for i=1:length(keys)
     
     % create full paths but exclude the root folder so it is not used in pattern matching (this
     % makes the container portable)
-%     fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);    
-%     matchIds_old = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
+    fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);    
+    matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
 %     
-% unclear whether relative folder matching works
-    fullPaths = strcat([folder filesep], files);
-    if keys{i}(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
-        [list, isDir] = glob([rootFolder filesep keys{i}]);
-    else % if it starts with / then it is relative to the manifest folder
-        [list, isDir] = glob([folder filesep keys{i}]);
-    end;
-    matchIds = ismember(fullPaths, list(~isDir));
-    if any(strcmp(folder, list(isDir))) || any(strcmp([folder filesep], list(isDir)))
-        matchIds(:) = true;
-    end;
-    matchIds = find(matchIds);
+  % unclear whether relative folder matching works
+%     fullPaths = strcat([folder filesep], files);
+%     if keys{i}(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
+%         [list, isDir] = glob([rootFolder filesep keys{i}]);
+%     else % if it starts with / then it is relative to the manifest folder
+%         [list, isDir] = glob([folder filesep keys{i}]);
+%     end;
+%     matchIds = ismember(fullPaths, list(~isDir));
+%     
+%     if any(strcmp(folder, list(isDir))) || any(strcmp([folder filesep], list(isDir)))
+%         matchIds(:) = true;
+%     end;
+%     matchIds = find(matchIds);
    % assert(isequal(matchIds_old, matchIds));
     
     % overwrite keys when a file name matched wildcard
     for j=1:length(matchIds)
-        % filesMapToKeyValues([folder filesep files{matchIds(j)}]) = [filesMapToKeyValues([folder filesep files{j}]); fileMatcheDirectives(keys{i})];
-        filesMapToKeyValues([folder filesep files{matchIds(j)}]) = addExtendedMapToMap(filesMapToKeyValues([folder filesep files{matchIds(j)}]), fileMatcheDirectives(keys{i}),...
-            [folder filesep manifestFileName], issues);
+        filename = [folder filesep files{matchIds(j)}];
+        %filesMapToKeyValues(filename) = [filesMapToKeyValues(filename); fileMatcheDirectives(keys{i})];
+        
+          filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename), fileMatcheDirectives(keys{i}),...
+              [folder filesep manifestFileName], issues);
     end;
     
 end;
@@ -188,11 +191,13 @@ if exist('onlyThisFolderFilekeys', 'var')
         filesMapToKeyValues(keys{i}) = [filesMapToKeyValues(keys{i}); onlyThisFolderFilekeys(keys{i})];
     end;
 end;
+
 end
 
 
 function map = addExtendedMapToMap(map, newMap, manifestFile, issues)
 keys = newMap.keys;
+map = copyMap(map);
 for i =1:length(keys)
     map = addExtendedKeyToMap(map, keys{i}, newMap(keys{i}), manifestFile, issues);
 end;

@@ -1,8 +1,12 @@
 a: b
 c: 12
 d: 50
+
 (matches *.m):
    isMFile: true
+
+(matches *.txt):
+   istxtFile: true
 
 (matches su*/):
    isUnderSuFolder: true
