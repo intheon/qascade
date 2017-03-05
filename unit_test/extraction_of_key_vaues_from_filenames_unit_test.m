@@ -9,7 +9,7 @@ cell_in = {'de_s1_feg_t1_hijk',...
     ''
     };
 pattern = 'abcde_[subject]_feg_[task]_hijk';
-cell_out = qascade_match(cell_in, pattern);
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
 assert(isempty(cell_out{1}))
 assert(strcmp(cell_out{2}('subject'),'s1'))
 assert(strcmp(cell_out{2}('task'),'t1'))
@@ -36,7 +36,7 @@ cell_in = {'de_s1_feg_t1_hijk',...
     ''
     };
 pattern = '[subject]_feg_[task]_hijk';
-cell_out = qascade_match(cell_in, pattern);
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
 assert(strcmp(cell_out{1}('subject'),'de_s1'))
 assert(strcmp(cell_out{1}('task'),'t1'))
 assert(strcmp(cell_out{2}('subject'),'abcde_s1'))
@@ -62,7 +62,7 @@ cell_in = {'de_s1_feg_t1_hijk',...
     ''
     };
 pattern = '[subject]_feg_[task]';
-cell_out = qascade_match(cell_in, pattern);
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
 assert(strcmp(cell_out{1}('subject'),'de_s1'))
 assert(strcmp(cell_out{1}('task'),'t1_hijk'))
 assert(strcmp(cell_out{2}('subject'),'abcde_s1'))
@@ -89,7 +89,7 @@ cell_in = {'de_s1_feg_t1_hijk',...
     ''
     };
 pattern = 'abcde_[condition]_feg_[task]_hijk';
-cell_out = qascade_match(cell_in, pattern);
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
 assert(isempty(cell_out{1}))
 assert(strcmp(cell_out{2}('condition'),'s1'))
 assert(strcmp(cell_out{2}('task'),'t1'))

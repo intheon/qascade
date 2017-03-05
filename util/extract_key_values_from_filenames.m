@@ -1,4 +1,4 @@
-function cell_out = qascade_match(cell_in, pattern)
+function cell_out = extract_key_values_from_filenames(cell_in, pattern)
 %% Extract keys and insert wildcards
 key_pointers = regexp(pattern,{'[',']'});
 n = length(key_pointers{1});
