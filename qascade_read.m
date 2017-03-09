@@ -1,4 +1,7 @@
 function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileDirective, rootFolder, issues)
+% [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileDirective, rootFolder, issues)
+% adheres to Qascade schema version 1.0.0
+
 filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
 
 if ~exist(folder, 'dir')
@@ -78,6 +81,7 @@ matchDirective = 'matches';
 tableDirective = 'table';
 noSubfolderDirective = 'no-subdir';
 extractDirective = 'extract';
+versionDirective = 'qascade version';
 
 onlyThisFolderKeys = newEmptyMap;
 
@@ -177,7 +181,9 @@ for i = 1:length(keys)
         else
             issues.addError(sprintf('In file ''%s'': the value assigned to directive ''(extract %s)'' is invalid. It should either be the string ''direct'' or a dictionary mapping extracted strings to their intended values.', [folder filesep manifestFileName], keys{i}));
         end;
-        
+    elseif ~isempty(regexp(keys{i}, ['^(' versionDirective '.*\)$'], 'once'))
+        version = newFolderKeyValues(keys{i});
+        fprintf('Manifest adheres to Qascade schema version %s.\n', version);
     else
         folderKeyValues = addExtendedKeyToMap(folderKeyValues, keys{i}, newFolderKeyValues(keys{i}), [folder filesep manifestFileName], issues);
     end;
