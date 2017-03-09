@@ -159,5 +159,3 @@ assert(strcmp(cell_out{1}('ext'),'set'))
 assert(strcmp(cell_out{1}('taskLabel'),'r'))
 %%
 
-% pattern = 'sub[subfolderNumber]/[filename].htm';
-% cell_out = extract_key_values_from_filenames({'sub2/group_normal/index2.htm'}, pattern);

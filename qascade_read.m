@@ -172,6 +172,12 @@ for i = 1:length(keys)
             extractPattern = strrep(extractPattern, '**', '*');
         end; 
 
+        if isempty(extractPattern)
+            issues.addError(sprintf('In file ''%s'': the extraction pattern in directive (extract) is empty.', [folder filesep manifestFileName]));
+        elseif extractPattern(end) == '/' % any pattern that has / at the end is interpretaed as a folder, matching all the files inside the folder (including subfolders)
+            extractPattern = [extractPattern '*'];
+        end;
+        
         if (strcmpi(newFolderKeyValues(keys{i}), 'direct') || isa(newFolderKeyValues(keys{i}), 'containers.Map'))
             if isKey(fileDirective.extract, extractPattern) % add it to already existing directives
                 fileDirective.extract(extractPattern) = [fileDirective.extract(matchPattern); newFolderKeyValues(keys{i})];
@@ -183,7 +189,7 @@ for i = 1:length(keys)
         end;
     elseif ~isempty(regexp(keys{i}, ['^(' versionDirective '.*\)$'], 'once'))
         version = newFolderKeyValues(keys{i});
-        fprintf('Manifest adheres to Qascade schema version %s.\n', version);
+        fprintf('Manifest ''%s'' adheres to Qascade schema version %s.\n', [folder filesep manifestFileName], version);
     else
         folderKeyValues = addExtendedKeyToMap(folderKeyValues, keys{i}, newFolderKeyValues(keys{i}), [folder filesep manifestFileName], issues);
     end;
@@ -258,46 +264,49 @@ for typeOfFiles = 1:2
     
     for i=1:length(keys)
         
-        key_values_cell = extract_key_values_from_filenames(fileToExtractFrom, keys{i});
-        
-        % overwrite keys with extracted values
-        for j=1:length(key_values_cell)
-            if ~isempty(key_values_cell{j})
-                filename = [folder filesep files{j}];
-                
-                if strcmpi(fileDirective.extract(keys{i}), 'direct')
-                    % extended map includes field overwrites (a.b.c)
-                    filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename),  key_values_cell{j},...
-                        [folder filesep manifestFileName], issues);
-                elseif isa(fileDirective.extract(keys{i}), 'containers.Map') % when an alternative mapping between extracted values and the values to be set is presented under (extract ..) directive.
-                    extractedKeys = key_values_cell{j}.keys;
-                    for k = 1:length(extractedKeys)
-                        if fileDirective.extract(keys{i}).isKey(extractedKeys{k}) % there is match between an item under the 'extract directive and one of the keys
-                            map = fileDirective.extract(keys{i});
-                            mapsForExtractedKey = map(extractedKeys{k}); % this contains how to map different values to other values, e.g. 'eo' to 'eyes-open'
-                            
-                            %                         (extract sometitle_S[subjectNumber]_T[taskLabel].set):
-                            %                            taskLabel:
-                            %                              r: resting % we are here, if there is a match
-                            %                              ec: eyes-closed
-                            %                              eo: eyes-open
-                            
-                            if mapsForExtractedKey.isKey(key_values_cell{j}(extractedKeys{k})) % if there was a
-                                valueForExtractedKey = mapsForExtractedKey(key_values_cell{j}(extractedKeys{k}));
+        if typeOfFiles == 1 || (typeOfFiles == 2 && ~isempty(strfind(keys{i}, '/'))) % only search full paths for keys that contain /
+            
+            key_values_cell = extract_key_values_from_filenames(fileToExtractFrom, keys{i});
+            
+            % overwrite keys with extracted values
+            for j=1:length(key_values_cell)
+                if ~isempty(key_values_cell{j})
+                    filename = [folder filesep files{j}];
+                    
+                    if strcmpi(fileDirective.extract(keys{i}), 'direct')
+                        % extended map includes field overwrites (a.b.c)
+                        filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename),  key_values_cell{j},...
+                            [folder filesep manifestFileName], issues);
+                    elseif isa(fileDirective.extract(keys{i}), 'containers.Map') % when an alternative mapping between extracted values and the values to be set is presented under (extract ..) directive.
+                        extractedKeys = key_values_cell{j}.keys;
+                        for k = 1:length(extractedKeys)
+                            if fileDirective.extract(keys{i}).isKey(extractedKeys{k}) % there is match between an item under the 'extract directive and one of the keys
+                                map = fileDirective.extract(keys{i});
+                                mapsForExtractedKey = map(extractedKeys{k}); % this contains how to map different values to other values, e.g. 'eo' to 'eyes-open'
+                                
+                                %                         (extract sometitle_S[subjectNumber]_T[taskLabel].set):
+                                %                            taskLabel:
+                                %                              r: resting % we are here, if there is a match
+                                %                              ec: eyes-closed
+                                %                              eo: eyes-open
+                                
+                                if mapsForExtractedKey.isKey(key_values_cell{j}(extractedKeys{k})) % if there was a
+                                    valueForExtractedKey = mapsForExtractedKey(key_values_cell{j}(extractedKeys{k}));
+                                else
+                                    valueForExtractedKey = key_values_cell{j}(extractedKeys{k});
+                                end;
+                                
+                                newMap = containers.Map;
+                                newMap(extractedKeys{k}) = valueForExtractedKey;
                             else
-                                valueForExtractedKey = key_values_cell{j}(extractedKeys{k});
+                                newMap = containers.Map;
+                                newMap(extractedKeys{k}) = key_values_cell{j}(extractedKeys{k});
                             end;
                             
-                            newMap = containers.Map;
-                            newMap(extractedKeys{k}) = valueForExtractedKey;
-                        else
-                            newMap = containers.Map;
-                            newMap(extractedKeys{k}) = key_values_cell{j}(extractedKeys{k});
+                            filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename),  newMap,...
+                                [folder filesep manifestFileName], issues);
                         end;
-                        
-                        filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename),  newMap,...
-                            [folder filesep manifestFileName], issues);
-                    end;                                    
+                    end;
                 end;
             end;
         end;
