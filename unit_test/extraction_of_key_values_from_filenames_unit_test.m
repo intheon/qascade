@@ -102,3 +102,52 @@ assert(strcmp(cell_out{5}('task'),'t2'))
 assert(isempty(cell_out{6}))
 assert(isempty(cell_out{7}))
 assert(isempty(cell_out{8}))
+%% wildcard pattern
+cell_in = {'de_s1_feg_t1_hijk',...
+    'abcde_s1_feg_t1_hijk',...
+    'abcde_s2_feg_t1_hijk',...
+    'abcde_s3_feg_t1_hijk',...
+    'abcde_s1_feg_t2_hijk',...
+    's1_feg_t2_hijk',...
+    'feg_t2_hijk',...
+    ''
+    };
+pattern = 'abcde_[subject]_*_[task]_hijk';
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
+
+assert(isempty(cell_out{1}))
+assert(strcmp(cell_out{2}('subject'),'s1'))
+assert(strcmp(cell_out{2}('task'),'t1'))
+assert(strcmp(cell_out{3}('subject'),'s2'))
+assert(strcmp(cell_out{3}('task'),'t1'))
+assert(strcmp(cell_out{4}('subject'),'s3'))
+assert(strcmp(cell_out{4}('task'),'t1'))
+assert(strcmp(cell_out{5}('subject'),'s1'))
+assert(strcmp(cell_out{5}('task'),'t2'))
+assert(isempty(cell_out{6}))
+assert(isempty(cell_out{7}))
+assert(isempty(cell_out{8}))
+
+% two wildcards
+pattern = 'abcde_[subject]_*_*_hijk';
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
+
+assert(strcmp(cell_out{2}('subject'),'s1'))
+assert(strcmp(cell_out{3}('subject'),'s2'))
+assert(strcmp(cell_out{4}('subject'),'s3'))
+assert(strcmp(cell_out{5}('subject'),'s1'))
+assert(isempty(cell_out{6}))
+assert(isempty(cell_out{7}))
+assert(isempty(cell_out{8}))
+
+% two wildcards
+pattern = '*_[subject]_*_*_hijk';
+cell_out = extract_key_values_from_filenames(cell_in, pattern);
+
+assert(strcmp(cell_out{2}('subject'),'s1'))
+assert(strcmp(cell_out{3}('subject'),'s2'))
+assert(strcmp(cell_out{4}('subject'),'s3'))
+assert(strcmp(cell_out{5}('subject'),'s1'))
+assert(isempty(cell_out{6}))
+assert(isempty(cell_out{7}))
+assert(isempty(cell_out{8}))

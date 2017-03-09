@@ -9,11 +9,24 @@ classdef Issues < handle
     
     methods
         function addError(obj, errorText)
+            
+            % prevent adding multiples of the same issue.
+            duplicateId = find(strcmp(obj.texts, errorText)); 
+            if ~isempty(duplicateId) && strcmp(obj.types{duplicateId}, 'error')
+                return;
+            end;
+            
             obj.texts{end+1} = errorText;
             obj.types{end+1} = 'error';
         end;
         
         function addWarning(obj, warningText)
+                                    
+            duplicateId = find(strcmp(obj.texts, warningText)); 
+            if ~isempty(duplicateId) && strcmp(obj.types{duplicateId}, 'warning')
+                return;
+            end;
+            
             obj.texts{end+1} = warningText;
             obj.types{end+1} = 'warning';
         end;
@@ -29,7 +42,7 @@ classdef Issues < handle
             if any(errorIds)
                 fprintf('\nErrors:\n\n');
                 for i=1:length(errorIds)
-                    fprintf('%d-%s\n\n', i, strjoin_adjoiner_first(sprintf('\n'), linewrap(obj.texts{errorIds(i)},100)));
+                    fprintf('%d- %s\n\n', i, strjoin_adjoiner_first(sprintf('\n'), linewrap(obj.texts{errorIds(i)},100)));
                 end;
                 fprintf('\n');
             end;

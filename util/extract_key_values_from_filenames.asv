@@ -32,11 +32,8 @@ for k=1:n
     c_k = filenames_cell{k};
     [values,match] = regexp(c_k,wpattern,'tokens','match');
     if strcmp(c_k,match)
-        
-        % ignore dummy variables added as placeholders for wildcards *
-        [keysExceptRandomVariables, ids] = setdiff(keys, randomVariableName);
+        [keysExceptRandomvariables, ids] = setdiff(keys, randomVariableName);
         keyValues = values{1}(ids);
-        
-        key_values_cell{k} = containers.Map(keysExceptRandomVariables, keyValues);
+        key_values_cell{k} = containers.Map(keys, values{1});
     end
 end

@@ -147,14 +147,11 @@ for i = 1:length(keys)
             issues.addError(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains two keys next to each other, i.e. [key1][key2].', [folder filesep manifestFileName], keys{i}));
         end;
             
-        if ~isempty(strfind(extractPattern, '*[')) || ~isempty(strfind(extractPattern, ']*'))
-            issues.addError(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains a wildcard next to a key, i.e. *[key1] or [key2]*.', [folder filesep manifestFileName], keys{i}));
+        if ~isempty(strfind(extractPattern, '*[')) || ~isempty(strfind(extractPattern, ']['))
+            issues.addError(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains two keys next to each other, i.e. [key1][key2].', [folder filesep manifestFileName], keys{i}));
         end;  
-                     
-        if ~isempty(strfind(extractPattern, '**'))
-            issues.addWarning(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains two wildcard next to each other, i.e. **. Converted to a single wildcard.', [folder filesep manifestFileName], keys{i}));
-            extractPattern = strrep(extractPattern, '**', '*');
-        end; 
+            
+
 
         if (strcmpi(newFolderKeyValues(keys{i}), 'direct') || isa(newFolderKeyValues(keys{i}), 'containers.Map'))
             if isKey(fileDirective.extract, extractPattern) % add it to already existing directives
