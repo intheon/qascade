@@ -95,18 +95,30 @@ for i = 1:length(keys)
     elseif ~isempty(regexp(keys{i}, ['^(' tableDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with (, $ indicates that it has to end with )
         % table name is not important
         
-        % write to a temporary file and use readtable to import as tsv file
-        tempFileName = [tempname '.txt'];
-        fid = fopen(tempFileName, 'w');
-        fprintf(fid, newFolderKeyValues(keys{i}));
-        fclose(fid);
+        % first try and see if the provided string resolves to an existing
+        % file name in the container.
+        tableFileName = strrep([rootFolder filesep newFolderKeyValues(keys{i})], '/', filesep);
+        
+        if exist(tableFileName, 'file')
+            % need to copy the file into a file with txt extension for
+            % readtable() to be able to read it.
+            newFileName = [tempname '.txt'];
+            copyfile(tableFileName, newFileName);
+            tableFileName = newFileName;
+        else            
+            % write to a temporary file and use readtable to import as tsv file
+            tableFileName = [tempname '.txt'];
+            fid = fopen(tableFileName, 'w');
+            fprintf(fid, newFolderKeyValues(keys{i}));
+            fclose(fid);
+        end;
         
         try
             warning('off', 'MATLAB:table:ModifiedVarnames');
-            tble = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',true);
-            tbleNoVariableNames = readtable(tempFileName,'Delimiter','\t','ReadVariableNames',false); % used to  read unmodified variable names
+            tble = readtable(tableFileName,'Delimiter','\t','ReadVariableNames',true);
+            tbleNoVariableNames = readtable(tableFileName,'Delimiter','\t','ReadVariableNames',false); % used to  read unmodified variable names
             warning('on', 'MATLAB:table:ModifiedVarnames');
-            delete(tempFileName);
+            delete(tableFileName);
             keyNames = tbleNoVariableNames{1,:};
             if strcmp(keyNames{1}, '(matches)')
                 for j=1:height(tble)

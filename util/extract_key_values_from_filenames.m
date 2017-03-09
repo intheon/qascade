@@ -1,6 +1,10 @@
 function key_values_cell = extract_key_values_from_filenames(filenames_cell, pattern)
 % key_values_cell = extract_key_values_from_filenames(filenames_cell, pattern)
 
+% escape the dot character in the pattern: . - > \. to avoid regex
+% misinterpreting it.
+pattern = strrep(pattern, '.', '\.');
+
 % replace wildcards (*) with random vartiable names which are going to be
 % ignored during extraction of values.
 firstWildcardId = find(pattern == '*', 1);
@@ -10,7 +14,6 @@ while ~isempty(firstWildcardId)
     pattern = [pattern(1:(firstWildcardId-1)) '[' randomVariableName{end} ']' pattern((firstWildcardId+1):end)];
     firstWildcardId = find(pattern == '*', 1);
 end;
-
 
 %% Extract keys and insert wildcards
 key_pointers = regexp(pattern,{'[',']'});

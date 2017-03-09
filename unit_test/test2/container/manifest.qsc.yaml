@@ -7,13 +7,14 @@ common_d: 50
 
 (extract sub[subfolderNumber]/[filename]): direct
 
-(extract sometitle_S[subjectNumber]_T[taskLabel].set):
+(extract some*_S[subjectNumber]_T[taskLabel].*):
       taskLabel:
               r: resting
               ec: eyes-closed
               eo: eyes-open
       subjectNumber:
              23: 230000
+
 (matches *.m):
    isMFile: true
 
@@ -43,10 +44,7 @@ s:
   field3: 3
   field4: 4
 
-(table): |
-       (matches)	key1	key2
-       *.txt	120	value2
-       *.m	10000	value3
+(table): table1.tsv
 
 (no-subdir):
   onlytopFolder: true

@@ -1,4 +1,4 @@
-/home/nima/Documents/mycode/matlab/qascade/unit_test/test1/container/matfile.m:
+matfile.m:
   common_a: c
   common_array:
   - [first]
@@ -16,7 +16,7 @@
   secondFolderKey: 2.0
   z:
     y: {z: 99.0}
-/home/nima/Documents/mycode/matlab/qascade/unit_test/test1/container/random.txt:
+random.txt:
   common_a: c
   common_array:
   - [first]
@@ -33,7 +33,7 @@
   secondFolderKey: 2.0
   z:
     y: {z: 99.0}
-? /home/nima/Documents/mycode/matlab/qascade/unit_test/test1/container/sub1/calculate_density_significance_of_many_dipoles_script.m
+? sub1/calculate_density_significance_of_many_dipoles_script.m
 : common_a: c
   common_array:
   - [first]
@@ -55,7 +55,7 @@
   sub1_aa: bb
   z:
     y: {z: 99.0}
-/home/nima/Documents/mycode/matlab/qascade/unit_test/test1/container/sub2/group_normal/index2.htm:
+sub2/group_normal/index2.htm:
   common_a: c
   common_array:
   - [first]
@@ -67,7 +67,7 @@
   sub2_bb: cc
   z:
     y: {z: 99.0}
-/home/nima/Documents/mycode/matlab/qascade/unit_test/test1/container/sub2/index.html:
+sub2/index.html:
   common_a: c
   common_array:
   - [first]
@@ -81,7 +81,7 @@
   sub2_bb: cc
   z:
     y: {z: 99.0}
-/home/nima/Documents/mycode/matlab/qascade/unit_test/test1/container/sub3/cfk.yaml:
+sub3/cfk.yaml:
   common_a: c
   common_array:
   - [first]
