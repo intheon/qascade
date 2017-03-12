@@ -9,16 +9,15 @@ for i=3:length(d)
     if d(i).isdir
         containerFolder = [path filesep d(i).name filesep 'container'];
         filekvsFullNames = nestd_cell_string_to_cell_string(qascade_read(containerFolder)); 
-        
-        % remove root (contrainer) folder name form the path and convert
+                
         % folder separators to unix-style '/'
         keys = filekvsFullNames.keys;
         filekvs = containers.Map;
         for j=1:length(keys)
-            filekvs(strrep(keys{j}(length(containerFolder)+2:end), filesep, '/')) = filekvsFullNames(keys{j});
+            filekvs(strrep(keys{j}, filesep, '/')) = filekvsFullNames(keys{j});
         end;
         
-         %WriteYaml([path filesep d(i).name filesep 'correct_read.yaml'], filekvs);
+        %WriteYaml([path filesep d(i).name filesep 'correct_read.yaml'], filekvs);
         correctFilekvs = nestd_cell_string_to_cell_string(ReadYamlRawMap([path filesep d(i).name filesep 'correct_read.yaml']));
                 
         if ~isequal(filekvs, correctFilekvs) && isequal(filekvs.keys, correctFilekvs.keys)

@@ -1,6 +1,10 @@
 function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileDirective, rootFolder, issues)
-% [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, fileDirective, rootFolder, issues)
+% [filesMapToKeyValues, issues] = qascade_read(folder);
 % adheres to Qascade schema version 1.0.0
+% returns one key per file, with paths relative to the root container folder ('folder' input argument). 
+% file separators are in the format on which the function is running, i.e. \ for Windows and / for Linux.
+
+
 
 filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
 
@@ -18,6 +22,11 @@ else
     folderKeys = newEmptyMap;
 end;
 
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% this needs to be changed to a struct with fields:
+% .directiverType
+% .directivepayload
+% this is to avoid overwriting parent directives, which currently happen due to the use of maps.
 if ~exist('fileDirective', 'var')
     fileDirective.match = newEmptyMap;
     fileDirective.extract = newEmptyMap;
@@ -29,8 +38,12 @@ if folder(end) == filesep
     folder = folder(1:(end-1));
 end;
 
-if ~exist('rootFolder', 'var')
-    rootFolder = folder;
+if ~exist('rootFolder', 'var') % root folder should not have a file separator at the end
+    if folder(end) == filesep
+        rootFolder = folder(1:end-1);
+    else
+        rootFolder = folder;
+    end;
 end;
 
 manifestFileName = 'manifest.qsc.yaml';
@@ -101,7 +114,7 @@ for i = 1:length(keys)
         
         % first try and see if the provided string resolves to an existing
         % file name in the container.
-        tableFileName = strrep([rootFolder filesep newFolderKeyValues(keys{i})], '/', filesep);
+        tableFileName = strrep([folder filesep newFolderKeyValues(keys{i})], '/', filesep);
         
         if exist(tableFileName, 'file')
             % need to copy the file into a file with txt extension for
@@ -109,7 +122,7 @@ for i = 1:length(keys)
             newFileName = [tempname '.txt'];
             copyfile(tableFileName, newFileName);
             tableFileName = newFileName;
-        else            
+        else
             % write to a temporary file and use readtable to import as tsv file
             tableFileName = [tempname '.txt'];
             fid = fopen(tableFileName, 'w');
@@ -162,16 +175,16 @@ for i = 1:length(keys)
         if ~isempty(strfind(extractPattern, ']['))
             issues.addError(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains two keys next to each other, i.e. [key1][key2].', [folder filesep manifestFileName], keys{i}));
         end;
-            
+        
         if ~isempty(strfind(extractPattern, '*[')) || ~isempty(strfind(extractPattern, ']*'))
             issues.addError(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains a wildcard next to a key, i.e. *[key1] or [key2]*.', [folder filesep manifestFileName], keys{i}));
-        end;  
-                     
+        end;
+        
         if ~isempty(strfind(extractPattern, '**'))
             issues.addWarning(sprintf('In file ''%s'': the extraction pattern in directive ''(extract %s)'' is invalid because it contains two wildcard next to each other, i.e. **. Converted to a single wildcard.', [folder filesep manifestFileName], keys{i}));
             extractPattern = strrep(extractPattern, '**', '*');
-        end; 
-
+        end;
+        
         if isempty(extractPattern)
             issues.addError(sprintf('In file ''%s'': the extraction pattern in directive (extract) is empty.', [folder filesep manifestFileName]));
         elseif extractPattern(end) == '/' % any pattern that has / at the end is interpretaed as a folder, matching all the files inside the folder (including subfolders)
@@ -183,7 +196,7 @@ for i = 1:length(keys)
                 fileDirective.extract(extractPattern) = [fileDirective.extract(matchPattern); newFolderKeyValues(keys{i})];
             else
                 fileDirective.extract(extractPattern) = newFolderKeyValues(keys{i});
-            end;            
+            end;
         else
             issues.addError(sprintf('In file ''%s'': the value assigned to directive ''(extract %s)'' is invalid. It should either be the string ''direct'' or a dictionary mapping extracted strings to their intended values.', [folder filesep manifestFileName], keys{i}));
         end;
@@ -204,7 +217,7 @@ end;
 
 % add file keys for the current folder
 for i=1:length(files)
-    filesMapToKeyValues([folder filesep files{i}]) = folderKeyValues;
+    filesMapToKeyValues(filepathKey(folder, files{i}, rootFolder)) = folderKeyValues;
 end;
 
 % apply file match directives (overwrite keys for files matching certain wildcard expressions)
@@ -233,7 +246,7 @@ for i=1:length(keys)
     
     % overwrite keys when a file name matched wildcard
     for j=1:length(matchIds)
-        filename = [folder filesep files{matchIds(j)}];
+        filename = filepathKey(folder,files{matchIds(j)}, rootFolder);
         
         % extended map includes field overwrites (a.b.c)
         filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename), fileDirective.match(keys{i}),...
@@ -271,7 +284,7 @@ for typeOfFiles = 1:2
             % overwrite keys with extracted values
             for j=1:length(key_values_cell)
                 if ~isempty(key_values_cell{j})
-                    filename = [folder filesep files{j}];
+                    filename = filepathKey(folder, files{j}, rootFolder);
                     
                     if strcmpi(fileDirective.extract(keys{i}), 'direct')
                         % extended map includes field overwrites (a.b.c)
@@ -399,4 +412,14 @@ end
 
 function map = newEmptyMap
 map = containers.Map('UniformValues', false);
+end
+
+function out = filepathKey(folder, filename, rootFolder)
+% out = filepathKey(folder, filename, rootFolder)
+
+%out = [folder filesep filename];
+out = [folder(length(rootFolder)+1:end) filesep filename];
+if out(1) == filesep
+    out = out(2:end);
+end;
 end
