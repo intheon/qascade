@@ -6,7 +6,7 @@ function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, f
 
 
 
-filesMapToKeyValues = containers.Map; % file keys are the (file: (key:value)) pairs.
+filesMapToKeyValues = OrderedMap; % file keys are the (file: (key:value)) pairs.
 
 if ~exist(folder, 'dir')
     error('Input folder does not exist');
@@ -22,8 +22,8 @@ else
     folderKeys = newEmptyMap;
 end;
 
-%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% this needs to be changed to a struct with fields:
+
+% fileDirectiv: a struct with fields:
 % .directiverType
 % .directivepayload
 % this is to avoid overwriting parent directives, which currently happen due to the use of maps.
@@ -99,7 +99,7 @@ versionDirective = 'qascade version';
 onlyThisFolderKeys = newEmptyMap;
 
 % overwrite keys by the ones present in the manifest file
-keys = newFolderKeyValues.keys;
+keys = newFolderKeyValues.keysIsOrder;
 
 for i = 1:length(keys)
     if ~isempty(regexp(keys{i}, ['^(' matchDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with (, $ indicates that it has to end with )
@@ -119,7 +119,13 @@ for i = 1:length(keys)
         if exist(tableFileName, 'file')
             % need to copy the file into a file with txt extension for
             % readtable() to be able to read it.
-            newFileName = [tempname '.txt'];
+            [path, name, ext] = fileparts(tableFileName);
+            if strcmp(ext, '.tsv') % add .txt as extension since readtable does not recognize .tsv extension.
+                newFileName = [tempname '.txt'];
+            else
+                newFileName = [tempname ext];
+            end;
+            
             copyfile(tableFileName, newFileName);
             tableFileName = newFileName;
         else
@@ -132,8 +138,14 @@ for i = 1:length(keys)
         
         try
             warning('off', 'MATLAB:table:ModifiedVarnames');
-            tble = readtable(tableFileName,'Delimiter','\t','ReadVariableNames',true);
-            tbleNoVariableNames = readtable(tableFileName,'Delimiter','\t','ReadVariableNames',false); % used to  read unmodified variable names
+            [path, name, ext] = fileparts(tableFileName);
+            if strcmp(ext, '.txt')
+                tble = readtable(tableFileName,'Delimiter','\t','ReadVariableNames',true);
+                tbleNoVariableNames = readtable(tableFileName,'Delimiter','\t','ReadVariableNames',false); % used to  read unmodified variable names
+            else
+                tble = readtable(tableFileName,'ReadVariableNames',true);
+                tbleNoVariableNames = readtable(tableFileName,'ReadVariableNames',false); % used to  read unmodified variable names
+            end;
             warning('on', 'MATLAB:table:ModifiedVarnames');
             delete(tableFileName);
             keyNames = tbleNoVariableNames{1,:};
@@ -191,7 +203,7 @@ for i = 1:length(keys)
             extractPattern = [extractPattern '*'];
         end;
         
-        if (strcmpi(newFolderKeyValues(keys{i}), 'direct') || isa(newFolderKeyValues(keys{i}), 'containers.Map'))
+        if (strcmpi(newFolderKeyValues(keys{i}), 'direct') || isa(newFolderKeyValues(keys{i}), 'OrderedMap'))
             if isKey(fileDirective.extract, extractPattern) % add it to already existing directives
                 fileDirective.extract(extractPattern) = [fileDirective.extract(matchPattern); newFolderKeyValues(keys{i})];
             else
@@ -221,7 +233,7 @@ for i=1:length(files)
 end;
 
 % apply file match directives (overwrite keys for files matching certain wildcard expressions)
-keys = fileDirective.match.keys;
+keys = fileDirective.match.keysIsOrder;
 for i=1:length(keys)
     
     % create full paths but exclude the root folder so it is not used in pattern matching (this
@@ -258,7 +270,7 @@ end;
 
 
 % apply extraction of values for keys matching xyz[key]abc.123 patters
-keys = fileDirective.extract.keys;
+keys = fileDirective.extract.keysIsOrder;
 
 for typeOfFiles = 1:2
     % apply the extraction twice, once of just file names (no paths) and
@@ -290,7 +302,7 @@ for typeOfFiles = 1:2
                         % extended map includes field overwrites (a.b.c)
                         filesMapToKeyValues(filename) = addExtendedMapToMap(filesMapToKeyValues(filename),  key_values_cell{j},...
                             [folder filesep manifestFileName], issues);
-                    elseif isa(fileDirective.extract(keys{i}), 'containers.Map') % when an alternative mapping between extracted values and the values to be set is presented under (extract ..) directive.
+                    elseif isa(fileDirective.extract(keys{i}), 'OrderedMap') % when an alternative mapping between extracted values and the values to be set is presented under (extract ..) directive.
                         extractedKeys = key_values_cell{j}.keys;
                         for k = 1:length(extractedKeys)
                             if fileDirective.extract(keys{i}).isKey(extractedKeys{k}) % there is match between an item under the 'extract directive and one of the keys
@@ -309,10 +321,10 @@ for typeOfFiles = 1:2
                                     valueForExtractedKey = key_values_cell{j}(extractedKeys{k});
                                 end;
                                 
-                                newMap = containers.Map;
+                                newMap = OrderedMap;
                                 newMap(extractedKeys{k}) = valueForExtractedKey;
                             else
-                                newMap = containers.Map;
+                                newMap = OrderedMap;
                                 newMap(extractedKeys{k}) = key_values_cell{j}(extractedKeys{k});
                             end;
                             
@@ -330,7 +342,7 @@ end;
 
 % add folder-only filesMapToKeyValues last so they take precedence over matches and other keys
 if exist('onlyThisFolderFilekeys', 'var')
-    keys = onlyThisFolderFilekeys.keys;
+    keys = onlyThisFolderFilekeys.keysIsOrder;
     for i=1:length(keys)
         filesMapToKeyValues(keys{i}) = [filesMapToKeyValues(keys{i}); onlyThisFolderFilekeys(keys{i})];
     end;
@@ -340,7 +352,7 @@ end
 
 
 function map = addExtendedMapToMap(map, newMap, manifestFile, issues)
-keys = newMap.keys;
+keys = newMap.keysIsOrder;
 map = copyMap(map);
 for i =1:length(keys)
     map = addExtendedKeyToMap(map, keys{i}, newMap(keys{i}), manifestFile, issues);
@@ -384,7 +396,7 @@ elseif lastKey && ~keyExists
 elseif ~lastKey && keyExists
     partsTravelled{end+1} = parts{2};
     nextLevel = map(parts{1});
-    if isa(nextLevel, 'containers.Map')
+    if isa(nextLevel, 'OrderedMap')
         newMap(parts{1}) = nestedKeyOverwrite(nextLevel, parts(2:end), value, partsTravelled, manifestFile, issues);
     else
         issues.addWarning(sprintf('In file %s: ''%s'' overwrite cannot be applied because ''%s'' (the parent key) is not a structure (multi-field entity).', manifestFile,...
@@ -406,12 +418,12 @@ function newMap = copyMap(map)
 if isempty(map)
     newMap = newEmptyMap;
 else
-    newMap = containers.Map(map.keys, map.values, 'UniformValues', false);
+    newMap = OrderedMap(map.keysIsOrder, map.values, 'UniformValues', false);
 end;
 end
 
 function map = newEmptyMap
-map = containers.Map('UniformValues', false);
+map = OrderedMap('UniformValues', false);
 end
 
 function out = filepathKey(folder, filename, rootFolder)
