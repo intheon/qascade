@@ -12,7 +12,7 @@ for i=3:length(d)
                 
         % folder separators to unix-style '/'
         keys = filekvsFullNames.keys;
-        filekvs = containers.Map;
+        filekvs = OrderedMap;
         for j=1:length(keys)
             filekvs(strrep(keys{j}, filesep, '/')) = filekvsFullNames(keys{j});
         end;

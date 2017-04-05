@@ -1,0 +1,18 @@
+(matches [put wildcards to catch your recording file extensions here, e.g. *.bdf]):
+    recordingParameters: # each contiguous block of channels with the same modality (EEG, mocap,..) should be described with in a separate list item. In combination, this list describe the types (modalities) of all channels in the recording. If a modality is recorded in discontinuous channel blocks, use multiple items, one for each for one channel block. For example, if EEG is recorded for channels 1:64 and 100:164, these must be placed in two items under modality.
+       -  type:   # e.g. EEG,  the signal type: EEG (for Electroencephalogram), MoCap (for Motion Capture) Gaze (for gaze / eye tracking parameters).
+          samplingRate: # e.g. 256, sampling rate of the modality (in Hz). In some file formats, e.g. XDF, each modality may be recorded at a different sampling rate.
+          name:  # e.g. BIOSEMI, the name (brand) of the sensor device e.g. BioSemi, OptiTrack, SMI...
+          description:  # a detailed description of the modality. Particularly useful for modalities that are derived from some other data, e.g. vehicle velocity.
+          startChannel:   # e.g. 1,  the channel number in the recording where the modality block starts.
+          endChannel:  # e.g. 256,  the channel number in the recording where the modality block ends.
+          referenceLocation:  # e.g. CMS, location of the reference channel or channels used during EEG or ECG recording. Should only be provided if <type> is EEG or ECG. For EEG, choose between the following values (or provide a new value if the reference is not any of these options):    ‘Right Mastoid’, ‘Left Mastoid’, ‘Mastoids’, ‘Linked Mastoids’ [for electrically linked mastoids], ‘Cz’ [top of the head], ‘CMS’ [e.g. in BIOSEMI], ‘Left Ear’, ‘Right Ear’, ‘Ears’, ‘Average’, ‘Nasion’, ‘Nose’.  For Wilson Central Terminal ECG reference use ‘WCT’.
+          referenceLabel:  # e.g. CMS, Labels of the reference channel or channels used during EEG or ECG recording. For example, if using 10-20 system and numerical average of both mastoids, use ‘A1, A2’ for <referenceLabel> and ‘Mastoids’ for <referenceLocation>. Use CMS as reference label for BIOSEMI (so e.g. its location can be determined from a channel location file).
+          channelLocationType:   # e.g. Biosemi256, For EEG modality, channel location type/standard used. One of the following: 10-20, 10-10, 10-5, EGI, Biosemi256, Custom. If a large subset of channels are in a particular location type, e.g. 10-20 but there are also extra channels that do not appear in that standard, you should use still use the standard name (these extra channels can then be ignored or dealt with separately). But if some channels have labels equal to standard labels while located at non-standard locations, then use Custom instead.
+          channelLabels:    # e.g. [A1, ...EXG1, ..], A comma separated list of labels corresponding to all channels, in square brackets. This node is required for EEG modality. Labels for all EEG channels, whether on the scalp or not, should be listed here.
+          nonScalpChannelLabels:  # e.g. [EXG1, EXG2, EXG3, EXG4, EXG5, EXG6, EXG7, EXG8], a comma separated list of labels corresponding to channels not on the scalp (in square brackets), e.g. EOG, EXG, EMG and Mastoids. This node is required for EEG modality.
+          subjectId:      # optional. e.g. driver, Only required if the recording contained data from more than one subject.
+       -  type:        # e.g. Gaze, Noise.. an example showing how to add other items here for other modalities.
+          startChannel:
+          endChannel:
+          ...          # add fields same as above here, as necessary

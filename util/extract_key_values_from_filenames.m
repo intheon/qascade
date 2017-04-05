@@ -40,6 +40,6 @@ for k=1:n
         [keysExceptRandomVariables, ids] = setdiff(keys, randomVariableName);
         keyValues = values{1}(ids);
         
-        key_values_cell{k} = containers.Map(keysExceptRandomVariables, keyValues);
+        key_values_cell{k} = OrderedMap(keysExceptRandomVariables, keyValues);
     end
 end

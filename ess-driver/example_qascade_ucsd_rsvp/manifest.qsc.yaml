@@ -1,0 +1,90 @@
+(namespace): eegstudy.org/level1/v/2.3.2 # 2.3.2 is the version of ESS schema. Chane if using another version.
+(qacade version): 1.2.0 # 1.2.0 is the version of Qascade schema used, change it using another version.
+
+study: # assign this key to all the files (recordings, documentation, notes, etc.) in the study.
+  title: RSVP Study  # the title of the study
+  shortDescription: Rapid Serial Visual Presentation Target (airplane) detection without immediate response # a short (less than 120 characters)  description of the study (e.g. explanation of study goals, experimental procedures  utilized, etc.)
+  description:  |
+         The purpose of this study was ..  # a detailed description the study (e.g. explanation of study goals, experimental procedures utilized, etc.)
+  contact: # information of individual to contact for data, results, or more information regarding the study.
+     givenName: Nima # given (first) name of person to contact
+     familyName: Bigdely-Shamlo # family name of person to contact
+     additionalName:  # middle-name or additional names of the person to contact
+     phone: 555-555-5555
+     email: nima@qusp.io
+
+  allSubjectsHealthyAndNormal: Yes # either ‘Yes’ or ‘No’ indicating whether all subjects are healthy and normal (mentally and physically).
+  license: # Optional, information about the the data license of the study.
+    type: CC0 # type of license used to distribute or share data (e.g. CC0 for Creative Commons)
+    text:  |
+        the person who associated a work with this deed has...
+    link: https://creativecommons.org/publicdomain/zero/1.0/ # URI/filepath that holds full licence text
+  projectFunding: # information about the organization(s) who has funded the data recording
+  - organization: NIH # each funding organization
+    grantId: NIH.123.xyz # optional, if based on a government grant
+  - organization: ARMY # each funding organization
+    grantId: xyz # optional, if based on a government grant
+  publications:  # list of publications produced from the data collected in this study.
+   - citation: Bigdely-Shamlo N.,  Mullen T.,... # citation of the publication
+     DOI: 10.1109/TNSRE.2008.2003381 # digital object identifier (DOI) of the paper
+     link: http://sccn.ucsd.edu/~nima/downloads/brain_activity_based_image_classification.pdf # URI/filepath that will link to pdf, html, etc. of the publication
+   - citation: some citation
+     DOI: 2345745
+     link: http:/..
+  experimenters: # optional, list of experimenters involved in the study.
+   - role: Data Analysis # the role of experimenter in study
+     givenName: Nima
+     familyName: Bigdely-Shamlo
+     additionalName: middlename
+   - role: somrole # the role of experimenter in study
+     givenName: Jane
+     familyName: Doe
+     additionalName: middlename
+  hedVersion: 3.0.1 # version of HED schema used in event tagging
+  eventSpecificationMethod: Codes # ‘Codes’ means it uses event codes, ‘Tags’ means it uses HED tags defined for each event instance as the ‘primary’ source of information. When ‘Codes’, a table of (event code, task, HED tags) is required. Please note that in both cases, event codes and HED tags may exists in the EEG structure, this field specifies which is the primary source of information (the other one being dependent, or deduced from, the primary source).
+  copyright: Copyright 2017 Qusp # copyright information (i.e. who owns the data)
+  IRB: This data was recorded under the approval of .. # IRB (Institutional Review Board or equivalent) information, including IRB number under which the study was conducted.
+  organizations: # information regarding the organization(s) that conducted the research study or experiment.
+      - name: Qusp # name of the organization
+        logoLink: qusp.jpg # URI/filepath of the file that holds the logo/graphic of the organization. The logo may  be placed on reports describing the data.
+  id: # optional, a universally unique ID (UUID) for the study
+  DOI: # optional, digital object identifier (DOI) of the study
+
+(matches *.bdf):
+    recordingParameters: # each contiguous block of channels with the same modality (EEG, mocap,..) should be described with in a separate list item. In combination, this list describe the types (modalities) of all channels in the recording. If a modality is recorded in discontinuous channel blocks, use multiple items, one for each for one channel block. For example, if EEG is recorded for channels 1:64 and 100:164, these must be placed in two items under modality.
+       -  type: EEG    # e.g. EEG,  the signal type: EEG (for Electroencephalogram), MoCap (for Motion Capture) Gaze (for gaze / eye tracking parameters).
+          samplingRate: 256 # e.g. 256, sampling rate of the modality (in Hz). In some file formats, e.g. XDF, each modality may be recorded at a different sampling rate.
+          name: BIOSEMI # e.g. BIOSEMI, the name (brand) of the sensor device e.g. BioSemi, OptiTrack, SMI...
+          description: a sentence # a detailed description of the modality. Particularly useful for modalities that are derived from some other data, e.g. vehicle velocity.
+          startChannel: 1  # e.g. 1,  the channel number in the recording where the modality block starts.
+          endChannel: 256  # e.g. 256,  the channel number in the recording where the modality block ends.
+          referenceLocation: CMS  # e.g. CMS, location of the reference channel or channels used during EEG or ECG recording. Should only be provided if <type> is EEG or ECG. For EEG, choose between the following values (or provide a new value if the reference is not any of these options):    ‘Right Mastoid’, ‘Left Mastoid’, ‘Mastoids’, ‘Linked Mastoids’ [for electrically linked mastoids], ‘Cz’ [top of the head], ‘CMS’ [e.g. in BIOSEMI], ‘Left Ear’, ‘Right Ear’, ‘Ears’, ‘Average’, ‘Nasion’, ‘Nose’.  For Wilson Central Terminal ECG reference use ‘WCT’.
+          referenceLabel: CMS   # e.g. CMS, Labels of the reference channel or channels used during EEG or ECG recording. For example, if using 10-20 system and numerical average of both mastoids, use ‘A1, A2’ for <referenceLabel> and ‘Mastoids’ for <referenceLocation>. Use CMS as reference label for BIOSEMI (so e.g. its location can be determined from a channel location file).
+          channelLocationType: Biosemi256  # e.g. Biosemi256, For EEG modality, channel location type/standard used. One of the following: 10-20, 10-10, 10-5, EGI, Biosemi256, Custom. If a large subset of channels are in a particular location type, e.g. 10-20 but there are also extra channels that do not appear in that standard, you should use still use the standard name (these extra channels can then be ignored or dealt with separately). But if some channels have labels equal to standard labels while located at non-standard locations, then use Custom instead.
+          channelLabels: [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27, A28, A29, A30, A31, A32, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B14, B15, B16, B17, B18, B19, B20, B21, B22, B23, B24, B25, B26, B27, B28, B29, B30, B31, B32, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21, C22, C23, C24, C25, C26, C27, C28, C29, C30, C31, C32, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, D20, D21, D22, D23, D24, D25, D26, D27, D28, D29, D30, D31, D32, E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12, E13, E14, E15, E16, E17, E18, E19, E20, E21, E22, E23, E24, E25, E26, E27, E28, E29, E30, E31, E32, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, F25, F26, F27, F28, F29, F30, F31, F32, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12, G13, G14, G15, G16, G17, G18, G19, G20, G21, G22, G23, G24, G25, G26, G27, G28, G29, G30, G31, G32, H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, H11, H12, H13, H14, H15, H16, H17, H18, H19, H20, H21, H22, H23, H24, EXG1, EXG2, EXG3, EXG4, EXG5, EXG6, EXG7, EXG8]   # A comma separated list of labels corresponding to all channels. This node is required for EEG modality. Labels for all EEG channels, whether on the scalp or not, should be listed here.
+          nonScalpChannelLabels: [EXG1, EXG2, EXG3, EXG4, EXG5, EXG6, EXG7, EXG8]    # a comma separated list of labels corresponding to channels not on the scalp, e.g. EOG, EXG, EMG and Mastoids. This node is required for EEG modality.
+          subjectRole: [the only subject]       # optional. Only required if the recording contained data from more than one subject.
+       -  type: Noise       # e.g. Gaze, Noise.. an example showing how to add other items here for other modalities.
+          samplingRate: 256
+          description: These channels contains a combination of non-connected EEG leads and various experiment control markers  such as image ID (channel 289). The last channel contains event codes.
+          startChannel: 257
+          endChannel: 290
+          channelLabels: [non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, non-connected EEG, RSVP image ID, Event code]
+
+    tasks: # mandatory. Indicates which task(s) are being performed in the recording. Usually each recording only includes on task (and you can skip  the array indicator (‘-’)). But in some cases a single data recording file could have multiple tasks and each of them should be provided here.
+       -  taskLabel: main # Should be selected from Cognitive Atlas Tasks when possible. Details can be added afterwards, separated by ‘;’ . For example if rest eyes closed is performed laying on bed, “rest eyes closed; laying on bed”
+          tags: 'Experiment context/Sitting,Experiment context/Indoors/ Dim room, Paradigm/Oddball discrimination paradigm/Visual oddball paradigm/Rapid Serial Visual Presentation' # HED string associated with the Task. Can choose from nodes under /Paradigm or extend it using tasks from Cognitive Atlas.
+          description: There is only one task, RSVP target detecttion, in this study.
+    eventCodes: # information about event codes
+       -  code: 1 # event code number or name/type. This must match an event indicator in the data recording file. It is permitted if some recordings lack an instance of the event.
+          tags: Event/Label/Non-target image, Event/Description/A non-target image is displayed for about 8 milliseconds, Event/Category/Experimental stimulus, (Item/Natural scene/Arial/Satellite, Participant/Effect/Cognitive/Expected/Non-target, Sensory presentation/Visual/Rendering type/Screen/2D), Attribute/Onset  # HED string, composed of multiple tags, describing the event, based on Hierarchical Event Descriptor (HED) schema, (if available, otherwise leave blank)
+          label: non-target # a short (20 characters max) label for the event code, e.g. ‘Button Press’ for event number 5.
+          description: satellite image of London without the white airplane target # detailed description of the event
+          taskLabel: # optional, only needed if a single event code has different meanings across tasks AND some recordings have multiple tasks. Should exactly match the field with the same name in tasks.
+       -  code: 2
+          tags: Event/Label/Non-target image, Event/Description/A non-target image is displayed for about 8 milliseconds, Event/Category/Experimental stimulus, (Item/Natural scene/Arial/Satellite, Participant/Effect/Cognitive/Expected/Non-target, Sensory presentation/Visual/Rendering type/Screen/2D), Attribute/Onset  # HED string, composed of multiple tags, describing the event, based on Hierarchical Event Descriptor (HED) schema, (if available, otherwise leave blank)
+          label: target # a short (20 characters max) label for the event code, e.g. ‘Button Press’ for event number 5.
+          description: satellite image of London with the white airplane target # detailed description of the event
+          taskLabel:
+
+(table): table.xlsx

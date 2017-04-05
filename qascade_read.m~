@@ -149,12 +149,6 @@ for i = 1:length(keys)
             warning('on', 'MATLAB:table:ModifiedVarnames');
             delete(tableFileName);
             keyNames = tbleNoVariableNames{1,:};
-            
-            % remove rowsand columns where all values are missing.
-            rowsWithAllMissingMask = all(ismissing(tble),2);
-            columnsWithAllMissingMask = all(ismissing(tble),1);            
-            tble = tble(~rowsWithAllMissingMask,~columnsWithAllMissingMask);
-            
             if strcmp(keyNames{1}, '(matches)')
                 for j=1:height(tble)
                     map = newEmptyMap;
@@ -257,11 +251,10 @@ for i=1:length(keys)
     fullPaths = strcat([folder filesep], files);
     if ~isempty(keys{i}) &&  keys{i}(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
         [list, isDir] = glob([rootFolder filesep '**' keys{i}]);
-    else % if it starts with / then it is relative to the manifest file folder (not implemented here fully, so checking both root and current folder)
+    else % if it starts with / then it is relative to the manifest folder
         [list, isDir] = glob([folder filesep keys{i}]);
         [list2, isDir2] = glob([rootFolder filesep keys{i}]);
-        list = [list list2];
-        isDir = [isDir isDir2];
+        list = [list list2
     end;
     matchIds = ismember(fullPaths, list(~isDir));
     

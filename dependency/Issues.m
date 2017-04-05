@@ -35,6 +35,10 @@ classdef Issues < handle
             itDoes = ~isempty(obj.texts);
         end;
         
+        function n = numberOfErrors(obj)
+            n = sum(strcmp(obj.types, 'error'));
+        end
+        
         function show(obj)
             errorIds = find(strcmp(obj.types, 'error'));
             warningIds = find(strcmp(obj.types, 'warning'));

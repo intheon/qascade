@@ -1,0 +1,106 @@
+(namespace): eegstudy.org/level1/v/2.3.2 # 2.3.2 is the version of ESS schema. Chane if using another version.
+(qacade version): 1.2.0 # 1.2.0 is the version of Qascade schema used, change it using another version.
+
+study: # assigns this key to all the files (recordings, documentation, notes, etc.) in the study.
+  title:   # e.g. Visual RSVP, the title of the study
+  shortDescription: # a short (less than 120 characters) description of the study, e.g. a short paragraph.
+
+  # a detailed description the study (e.g. explanation of study goals, experimental procedures utilized, etc.)
+  description:  |
+         The purpose of this study was ..
+
+  contact: # information of individual to contact for data, results, or more information regarding the study.
+     givenName: # given (first) name of person to contact
+     familyName:  # family name of person to contact
+     additionalName:  # middle-name or additional names of the person to contact
+     phone:
+     email:
+
+  allSubjectsHealthyAndNormal: # either ‘Yes’ or ‘No’, indicating whether all subjects are healthy and normal (mentally and physically).
+  license: # Optional, information about the the data license of the study.
+    type:  # type of license used to distribute or share data (e.g. CC0 for Creative Commons)
+
+    # text of the liecense
+    text:  |
+        the person who associated a work with this deed has...
+    link:  # URI/filepath that holds full licence text, er.g. http://..
+
+  projectFunding: # information about the organization(s) who has funded the data recording, each organization a separate item
+   - organization:  # e.g. NIH, each funding organization
+     grantId:       # optional, if based on a government grant
+   - organization:  # if more than one organization funded the study.
+     grantId:
+
+  publications:  # optional, a list of publications associated with the data collected in this study.
+   - citation: # citation of the publication, e.g. Bigdely-Shamlo N.,  Mullen T.,..
+     DOI:   # digital object identifier (DOI) of the paper, e.g. 10.1109/TNSRE.2008.2003381
+     link:  # URI/filepath that will link to pdf, html, etc. of the publication
+   - citation: # another citation
+     DOI:
+     link:
+
+  experimenters: # optional, list of experimenters involved in the study.
+   - role:  # the role of experimenter in study, e.g. Data Analysis, Study designer, Lab technician
+     givenName:
+     familyName:
+     additionalName:
+   - role: # another experimenter..
+     givenName:
+     familyName:
+     additionalName:
+
+  hedVersion: # version of HED schema used in event tagging, e.g. 3.0.1
+  eventSpecificationMethod: 'Codes' # ‘Codes’ means it uses event codes, ‘Tags’ means it uses HED tags defined for each event instance as the ‘primary’ source of information. When ‘Codes’, a table of (event code, task, HED tags) is required. Please note that in both cases, event codes and HED tags may exists in the EEG structure, this field specifies which is the primary source of information (the other one being dependent, or deduced from, the primary source).
+  copyright:  # copyright information (i.e. who owns the data), e.g. Copyright 2017 Qusp
+  IRB: # IRB (Institutional Review Board or equivalent) information, including IRB number under which the study was conducted, e.g.  This data was recorded under the approval of ..
+  organizations: # information regarding the organization(s) that conducted the research study or experiment.
+      - name: # name of the organization, e.g. Qusp
+        logoLink: # URI/filepath of the file that holds the logo/graphic of the organization. The logo may  be placed on reports describing the data, e.g. qusp.jpg
+  id: # optional, a universally unique ID (UUID) for the study
+  DOI: # optional, digital object identifier (DOI) of the study
+
+(matches *.bdf): # assign the following keys to data rcording files (the file that contain actual time-series data). When some files have a different set of parameters, e.g. a different task, they should be matched in a separate section and assigned different key values.
+    recordingParameters: # each contiguous block of channels with the same modality (EEG, mocap,..) should be described with in a separate list item. In combination, this list describe the types (modalities) of all channels in the recording. If a modality is recorded in discontinuous channel blocks, use multiple items, one for each for one channel block. For example, if EEG is recorded for channels 1:64 and 100:164, these must be placed in two items under modality.
+       -  type:   # e.g. EEG,  the signal type: EEG (for Electroencephalogram), MoCap (for Motion Capture) Gaze (for gaze / eye tracking parameters).
+          samplingRate:  # e.g. 256, sampling rate of the modality (in Hz). In some file formats, e.g. XDF, each modality may be recorded at a different sampling rate.
+          name:  # e.g. BIOSEMI, the name (brand) of the sensor device e.g. BioSemi, OptiTrack, SMI...
+          description: # a detailed description of the modality. Particularly useful for modalities that are derived from some other data, e.g. vehicle velocity.
+          startChannel:  # e.g. 1,  the channel number in the recording where the modality block starts.
+          endChannel:   # e.g. 256,  the channel number in the recording where the modality block ends.
+          referenceLocation:  # e.g. CMS, location of the reference channel or channels used during EEG or ECG recording. Should only be provided if <type> is EEG or ECG. For EEG, choose between the following values (or provide a new value if the reference is not any of these options):    ‘Right Mastoid’, ‘Left Mastoid’, ‘Mastoids’, ‘Linked Mastoids’ [for electrically linked mastoids], ‘Cz’ [top of the head], ‘CMS’ [e.g. in BIOSEMI], ‘Left Ear’, ‘Right Ear’, ‘Ears’, ‘Average’, ‘Nasion’, ‘Nose’.  For Wilson Central Terminal ECG reference use ‘WCT’.
+          referenceLabel:  # e.g. CMS, Labels of the reference channel or channels used during EEG or ECG recording. For example, if using 10-20 system and numerical average of both mastoids, use ‘A1, A2’ for <referenceLabel> and ‘Mastoids’ for <referenceLocation>. Use CMS as reference label for BIOSEMI (so e.g. its location can be determined from a channel location file).
+          channelLocationType: # e.g. Biosemi256, For EEG modality, channel location type/standard used. One of the following: 10-20, 10-10, 10-5, EGI, Biosemi256, Custom. If a large subset of channels are in a particular location type, e.g. 10-20 but there are also extra channels that do not appear in that standard, you should use still use the standard name (these extra channels can then be ignored or dealt with separately). But if some channels have labels equal to standard labels while located at non-standard locations, then use Custom instead.
+          channelLabels:   # e.g. [A1, A2, ..., EXG1, EXG2,...], A comma separated list of labels corresponding to all channels (MUST have the same number of labsls as endChannel - startChannel+1). This node is required for EEG modality. Labels for all EEG channels, whether on the scalp or not, should be listed here.
+          nonScalpChannelLabels:  # e.g., [EXG1, EXG2, EXG3], a comma separated list of labels corresponding to channels not on the scalp, e.g. EOG, EXG, EMG and Mastoids. This node is required for EEG modality.
+          subjectRole:  # optional. e.g. "Driver", Only required if the recording contained data from more than one subject.
+          # continue adding more items until all the channels belong to a modality
+       -  type:       # e.g. Gaze, Noise.. an example showing how to add other items here for other modalities.
+          samplingRate:
+          description:
+          startChannel:
+          endChannel:
+          channelLabels:
+
+    tasks: # mandatory. Indicates which task(s) are being performed in the recording. Usually each recording only includes on task (and you can skip  the array indicator (‘-’)).
+           # But in some cases a single data recording file could have multiple tasks and each of them should be provided here. When recordings differ in tasks, make sure to assign this key properly to different groups of recordings. You may use Qascade (match) and (extract) directive useful in doing so.
+       -  taskLabel: # Should be selected from Cognitive Atlas Tasks when possible. Details can be added afterwards, separated by ‘;’ . For example if rest eyes closed is performed laying on bed, “rest eyes closed; laying on bed”
+          tags:     # HED string associated with the Task. Can choose from nodes under /Paradigm or extend it using tasks from Cognitive Atlas.  e.g, "Experiment context/Sitting,Experiment context/Indoors/ Dim room, Paradigm/Oddball discrimination paradigm/Visual oddball paradigm/Rapid Serial Visual Presentation"
+          description: # A detailed description of the task, e.g. a paragraph.
+          # more tasks
+       -  taskLabel:
+          tags:
+          description:
+    eventCodes: # information about event codes
+       -  code:  # e.g., "1", event code number or name/type. This must match an event indicator in the data recording file. It is permitted if some recordings lack an instance of the event.
+          tags: # HED string, composed of multiple tags, describing the event, based on Hierarchical Event Descriptor (HED) schema, see www.hedtags.org,  (if available, otherwise leave blank)
+          label:  # a short (20 characters max) label for the event code, e.g. Button Press.
+          description:  # detailed description of the event
+          taskLabel: # optional, only needed if a single event code has different meanings across tasks AND some recordings have multiple tasks. Should exactly match the field with the same name in tasks.
+          # include all events codes as items here
+       -  code:
+          tags:
+          label:
+          description:
+          taskLabel:
+
+(table): table.xlsx # this points to the external table
