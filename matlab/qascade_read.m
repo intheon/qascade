@@ -150,7 +150,7 @@ for i = 1:length(keys)
             delete(tableFileName);
             keyNames = tbleNoVariableNames{1,:};
             
-            % remove rowsand columns where all values are missing.
+            % remove rows and columns where all values are missing.
             rowsWithAllMissingMask = all(ismissing(tble),2);
             columnsWithAllMissingMask = all(ismissing(tble),1);            
             tble = tble(~rowsWithAllMissingMask,~columnsWithAllMissingMask);

@@ -1,5 +1,0 @@
-(matches *.m):
-   isMFileFromTop: true
-
-(matches *.*):
-   isMFileFromTop: false
