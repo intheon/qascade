@@ -1,0 +1,58 @@
+(qascade version): 1.0.0 
+common_a: b
+common_c: 12
+common_d: 50
+
+(extract subject_[subject_number]_task_[task_number]_xyz.txt): direct
+(extract subject_**_[other].txt): direct
+
+(extract sub[subfolderNumber]/[filename]): direct
+
+(extract some*_S[subjectNumber]_T[taskLabel].*):
+      taskLabel:
+              r: resting
+              ec: eyes-closed
+              eo: eyes-open
+      subjectNumber:
+             23: 230000
+
+(matches *.m):
+   isMFile: true
+
+(matches *.txt):
+   istxtFile: true
+
+(matches su*/):
+   isDirectlyUnderSuFolder: true
+
+(matches su*/**):
+   isAnywhereUnderSuFolder: true
+
+(matches group_*/):
+   isUnderGroupFolder: true
+
+common_array:
+   - first
+   - second
+
+common_a: c
+
+z.y.z: 99
+
+s:
+  field1: 1
+  field2: 2
+  field3: 3
+  field4: 4
+
+(table): table1.tsv
+
+(no-subdir):
+  onlytopFolder: true
+  secondFolderKey: 2
+  (matches *.m):
+     isMFileFromOnlyTop: true
+  (table): |
+       (matches)	folderonlytablekey1	folderonlytablekey2 
+       *.txt	99	folderonlyValue2
+       *.m	10000	folderonlyValue3
