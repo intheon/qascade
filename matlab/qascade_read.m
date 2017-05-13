@@ -148,12 +148,14 @@ for i = 1:length(keys)
             end;
             warning('on', 'MATLAB:table:ModifiedVarnames');
             delete(tableFileName);
-            keyNames = tbleNoVariableNames{1,:};
+            
             
             % remove rows and columns where all values are missing.
             rowsWithAllMissingMask = all(ismissing(tble),2);
             columnsWithAllMissingMask = all(ismissing(tble),1);            
             tble = tble(~rowsWithAllMissingMask,~columnsWithAllMissingMask);
+            tbleNoVariableNames = tbleNoVariableNames([1; find(~rowsWithAllMissingMask)+1],~columnsWithAllMissingMask);
+            keyNames = tbleNoVariableNames{1,:};
             
             if strcmp(keyNames{1}, '(matches)')
                 for j=1:height(tble)
