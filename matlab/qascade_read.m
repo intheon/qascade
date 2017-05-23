@@ -178,8 +178,17 @@ for i = 1:length(keys)
                             map(keyNames{k}) = value;
                         end;
                         
+                        if any(map(keyNames{k}) == '''')
+                            issues.addWarning(sprintf('Detected '' character in %s value of table %s, are you sure you want to include this character in your string? There is no need to surrond strings with it in your table.', map(keyNames{k}), newFolderKeyValues(keys{i})));
+                        end;                                                
+                        
                     end;
-                    matchPattern = cell2mat(tble{j, 'x_matches_'});
+                    matchPattern = cell2mat(tble{j, 'x_matches_'});                                        
+                    
+                    if any(matchPattern == '\')
+                        issues.addWarning(sprintf('Detected \\ character in %s match pattern of table %s, are you sure you want to include this character in your string? You must use / character in all Qascade paths, regardless of the OS.', matchPattern, newFolderKeyValues(keys{i})));
+                    end;
+                    
                     if isKey(fileDirective.match, matchPattern)
                         fileDirective.match(matchPattern) = [fileDirective.match(matchPattern); map];
                     else

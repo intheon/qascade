@@ -293,6 +293,8 @@ if itIsLevel0
             
             if isfield(session, 'notes')
                 sessionNotes{i} = session.notes;
+            else
+                sessionNotes{i} = struct('text','','link','','linkLabel','');
             end;
         end;
         
