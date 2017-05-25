@@ -1,9 +1,6 @@
 #MATLAB temp files
 *.m~
 
-# PyCharm Editor
-.idea/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
