@@ -34,6 +34,6 @@ A `Qascade` parser traverses the folder structure, starting from a root folder, 
 
 Here is a visual comparison between an `ESS Level 1 XML` container and `ESS Level 1 Qascade`:
 
-![Qascade vs ESS XML](./docs/qascade_ess_xml_ comparison.png "Qascade vs ESS XML")
+![Qascade vs ESS XML](./docs/qascade_ess_xml_comparison.png "Qascade vs ESS XML")
 
 _Copyright © 2016-2017 [Qusp](https://qusp.io)_
