@@ -26,7 +26,7 @@ You can learn from [Qascade Reference](https://docs.google.com/document/d/1H5wdQ
 
 ## Example use: EEG/MEG data containerization
 
-`Qascade` may be used as the first step of placing files in [`ESS`](http://www.eegstudy.org)/`BIDS`, etc. An `ESS` driver for `Qascade` is available [in this repository](https://github.com/qusp/qascade/tree/master/matlab/ess-driver).
+`Qascade` may be used as the first step of placing files in [`ESS`](http://www.eegstudy.org)/`BIDS`, etc. An `ESS` driver for `Qascade` is available [in this repository](https://github.com/qusp/qascade/tree/master/matlab/ess-driver). A guide for placing studies in `ESS` containers using `Qascade` is available [here](https://docs.google.com/document/d/1n8s9FsSFD1no9gRmGp1Wtt_8u6YxzfCTHbCfeQAsKYw/edit?usp=sharing).
 
 A `Qascade` parser traverses the folder structure, starting from a root folder, and returns a flat list of files (including their full path), as keys, each associated with an array of `(key: value)` pairs for the file. The output is then be used by `ESS`/`BIDS`/.. applications to place the data into domain-specific containers:
 
