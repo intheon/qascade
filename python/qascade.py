@@ -1,7 +1,7 @@
-import os
 import base64
 import json
 import yaml
+import files_record
 
 QASCADE_MANIFEST_FILE = 'manifest.qsc.yaml'
 
@@ -13,37 +13,8 @@ VERSION_DIRECTIVE = 'qascade version'
 IGNORE_DIRECTIVE = 'ignore'
 # the (namespace) directive is processes like normal (key: value)s, hence not included
 
-QASCADE_DIRECTIVES = [MATCH_DIRECTIVE, EXTRACT_DIRECTIVE, TABLE_DIRECTIVE, NO_SUBDIR_DIRECTIVE, VERSION_DIRECTIVE, IGNORE_DIRECTIVE]
-
-
-def create_files_record(container_root_folder='', as_json=False):
-
-    """
-    Creates a 'files record' which consists of the list of all files under the root
-    container folder (in 'filenames' key) and the contents of select files (in 
-    'file_contents' key) encodes as Byte64.
-    
-    :param container_root_folder: A string specifying the Qascade container's folder.
-    :param as_json: Whether to return the record in JSON format.
-    :return: the 'files record' in dictionary or JSON format (see 'as_json' parameter)
-    """
-    files_record = {'filenames': [], 'file_contents': {}}
-    for root, dirs, files in os.walk(container_root_folder, topdown=False):
-         for name in files:
-            root_relative_to_container = root[len(container_root_folder)+1:]
-            filename_relative_to_container = os.path.join(root_relative_to_container, name)
-            files_record['filenames'].append(filename_relative_to_container)
-            full_filename = os.path.join(root, name)
-            name_part, extension = os.path.splitext(name)
-            if (extension in {'.tsv', '.xlsx'}) or name == 'manifest.qsc.yaml':
-                read_bytes = open(full_filename, 'rb').read()
-                read_bytes64 = base64.b64encode(read_bytes).decode('ascii')
-                files_record['file_contents'][filename_relative_to_container] = read_bytes64
-
-    if as_json:
-        return json.dumps(files_record)
-    else:
-        return files_record
+QASCADE_DIRECTIVES = [MATCH_DIRECTIVE, EXTRACT_DIRECTIVE, TABLE_DIRECTIVE, NO_SUBDIR_DIRECTIVE,
+                      VERSION_DIRECTIVE, IGNORE_DIRECTIVE]
 
 
 def files_and_folders(record, path=''):
@@ -51,8 +22,8 @@ def files_and_folders(record, path=''):
     Returns a tuple containing the lists of files and folders under 
     a certain path, from a Qascade record (as dictionary).
     
-    :param path: path relative to the root of the Qascade container, empty refers to the root. 
     :param record: qascade record
+    :param path: path relative to the root of the Qascade container, empty refers to the root.     
     :return: the tuple (files, folders)
     """
 
@@ -103,25 +74,26 @@ def get_file_content(filename, record):
 
     return file_content
 
-def _process_manifest_keys(manifest_dict, files, current_folder='', files_dict=None, directives=None, issues=None):
-    for manifest_key in manifest_dict:
-        is_directive = False
-        for directive in QASCADE_DIRECTIVES
-            if manifest_key.find('(' + directive) == 0 and manifest_key[-1] == ')':
-                is_directive = True
-                # code goes here
-                break
 
-        if not is_directive:
-            for file in files:
-                # files_dict[file]['history'].append # add a record showing which directive in which
-                                                   # manifest file overwrote which key
-                files_dict[file]['key-values'][manifest_key] = manifest_dict[manifest_key]
+def _make_file_dicts(record, current_folder='', files_dict_array=None, parent_folder_manifest_dict=None, issues=None):
 
+    """
+    Reads/assigns raw (key:value) pairs to files in a given folder.
+    Recursively goes into folders, reads qascade manifests (if existed) and places their content in file dictionaries.
 
+    :param record: qascade file record
+    :param current_folder: path relative to the root of the Qascade container, empty refers to the root. 
+    :param files_dict_array: a dictionary that maps each filename (as provided in the record) to an array of 
+                             dictionaries, each associated with a manifest file 
+    
+    :return: the tuple (files, folders)
+    """
 
+    if files_dict_array is None:
+        files_dict_array = {}
 
-def process_record(record, current_folder='', files_dict=None, file_directives=None, issues=None):
+    if issues is None:
+        issues = []
 
     if isinstance(record, str):
         try:
@@ -131,25 +103,76 @@ def process_record(record, current_folder='', files_dict=None, file_directives=N
             return
 
     files, folders = files_and_folders(record, current_folder)  # get files and folders under the current folder
+    current_folder_manifest_dict = None
+
     if QASCADE_MANIFEST_FILE in files:
         manifest_content = get_file_content(current_folder + '/' + QASCADE_MANIFEST_FILE, record)
-        if not manifest_content:  # if it is empty
+        if not manifest_content:  # if manifest content has not been provided
             issues.append('Error: Missing content for ' + current_folder + '/' + QASCADE_MANIFEST_FILE
                           + ' file in files record.')
-        else:  # not empty
-            manifest_dict = yaml.load(manifest_content.decode('ascii'))
-            print(manifest_dict)
+        else:                     # the manifest file is not empty
+            current_folder_manifest_dict = yaml.load(manifest_content.decode('ascii'))
+            print('folder:  ' + current_folder + ',  folder (keys-value)s:  ' + json.dumps(current_folder_manifest_dict))
+            print('\n')
+
+    for file in files:
+        if file not in files_dict_array:
+            files_dict_array[file] = []
+
+        if parent_folder_manifest_dict is not None:
+            files_dict_array[file].append(parent_folder_manifest_dict)
+
+        if current_folder_manifest_dict is not None:
+            files_dict_array[file].append(current_folder_manifest_dict)
 
     for folder in folders:
-        process_record(record, folder)
+        print('\nProcessing folder: ' + folder)
+        files_dict_array = _make_file_dicts(record, current_folder + '/' + folder, files_dict_array)
+
+    return files_dict_array
 
 
+def _process_manifest_keys(manifest_dict, issues=None):
 
-folder = r'/home/nima/Documents/mycode/multi/qascade/unit_test/test2/container'
-files_record = create_files_record(folder, False)
+    """
+    Processes an array of dictionaries, each containing (key, value) pairs read from 
+     one level of 
+
+    :param record: qascade record
+    :param path: path relative to the root of the Qascade container, empty refers to the root.     
+    :return: the tuple (files, folders)
+    """
+
+    for manifest_key in manifest_dict:
+        is_directive = False
+        for directive in QASCADE_DIRECTIVES:
+            if manifest_key.find('(' + directive) == 0 and manifest_key[-1] == ')':
+                is_directive = True
+                # code goes here
+                break
+
+        if not is_directive:
+            for file in files:
+                # files_dict[file]['history'].append # add a record showing which directive in which
+                # manifest file overwrote which key
+                files_dict[file]['key-values'][manifest_key] = manifest_dict[manifest_key]
+
+
+def process_record(record):
+    files_dic_array = _make_file_dicts(record)
+    files_final_dict = {}  # final output, with directives processed
+    for file in files_dic_array:
+        if not file.lower() == QASCADE_MANIFEST_FILE: # skip manifest files themselves
+            files_final_dict[file] = _process_manifest_keys(files_dic_array[file])
+
+    return files_final_dict
+
+
+#folder = r'/home/nima/Documents/mycode/multi/qascade/unit_test/test2/container'
+#files_record = create_files_record(folder, False)
 # files, folders = files_and_folders(files_record, 'sub2')
 
-process_record(files_record)
+#process_record(files_record)
 # content = get_file_content('manifest.qsc.yaml', file_record)
 # print(content.decode('ascii'))
 # print(files)
