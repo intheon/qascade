@@ -2,6 +2,7 @@ function [foundFiles, foundValues, allFileNames, hasVariableMask] = qascade_find
 % [foundFiles, foundValues, allFileNames, hasVariableMask] = qascade_find(fileKeyValues, query)
 %
 % input:
+%    'fileKeyValues': is an output from qascade_read() function.
 %    'query' is either a string or a cell array of strings. Each cell contains a field key name, e.g.
 %    'samplingRate', or the address of a nested field, e.g. 'subject.name'
 % output:
@@ -12,10 +13,13 @@ function [foundFiles, foundValues, allFileNames, hasVariableMask] = qascade_find
 %             field. In this case, the returned values will be a cell, one for each element of that
 %             array.
 %
-%    'allFileNames'
+%    'allFileNames': a cell array containing all the file names conatined in fileKeyValues variable.
 %    'hasVariableMask' is a boolean array the size of input 'fileKeyValues' on the first dimension and
 %             the size of 'query' on the second dimension. It is true for indices where the variable
 %             is found and false otherwise.
+%
+% Copyright 2018 © Intheon
+
 if ~iscell(query)
     query = {query};
 end;

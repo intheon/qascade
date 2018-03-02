@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9e619dab-0ea2-4ab8-86e5-a8cc3feff5b5" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/files_record.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../LICENSE.txt" afterPath="$PROJECT_DIR$/../LICENSE.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/qascade.py" afterPath="$PROJECT_DIR$/qascade.py" />
     </list>
@@ -19,13 +19,13 @@
       <file leaf-file-name="qascade.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/qascade.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-845">
-              <caret line="81" column="118" lean-forward="false" selection-start-line="81" selection-start-column="118" selection-end-line="81" selection-end-column="118" />
+            <state relative-caret-position="742">
+              <caret line="159" column="0" lean-forward="true" selection-start-line="159" selection-start-column="0" selection-end-line="159" selection-end-column="0" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
                 <element signature="e#577#1672#0" expanded="false" />
                 <element signature="e#1719#2383#0" expanded="false" />
-                <element signature="e#4824#5709#0" expanded="false" />
+                <element signature="e#2510#4760#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -75,8 +75,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="12" />
-    <option name="y" value="174" />
+    <option name="x" value="-54" />
+    <option name="y" value="170" />
     <option name="width" value="2061" />
     <option name="height" value="1167" />
   </component>
@@ -281,7 +281,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="12" y="174" width="2061" height="1167" extended-state="1" />
+    <frame x="-54" y="170" width="2061" height="1167" extended-state="1" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.122994654" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -326,7 +326,7 @@
             <element signature="e#0#13#0" expanded="true" />
             <element signature="e#577#1672#0" expanded="false" />
             <element signature="e#1719#2383#0" expanded="false" />
-            <element signature="e#4824#5709#0" expanded="false" />
+            <element signature="e#2510#4760#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -339,7 +339,7 @@
             <element signature="e#0#13#0" expanded="true" />
             <element signature="e#577#1672#0" expanded="false" />
             <element signature="e#1719#2383#0" expanded="false" />
-            <element signature="e#4824#5709#0" expanded="false" />
+            <element signature="e#2510#4760#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -352,7 +352,7 @@
             <element signature="e#0#13#0" expanded="true" />
             <element signature="e#577#1672#0" expanded="false" />
             <element signature="e#1719#2383#0" expanded="false" />
-            <element signature="e#4824#5709#0" expanded="false" />
+            <element signature="e#2510#4760#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -365,7 +365,7 @@
             <element signature="e#0#13#0" expanded="true" />
             <element signature="e#577#1672#0" expanded="false" />
             <element signature="e#1719#2383#0" expanded="false" />
-            <element signature="e#4824#5709#0" expanded="false" />
+            <element signature="e#2510#4760#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -390,13 +390,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/qascade.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-845">
-          <caret line="81" column="118" lean-forward="false" selection-start-line="81" selection-start-column="118" selection-end-line="81" selection-end-column="118" />
+        <state relative-caret-position="742">
+          <caret line="159" column="0" lean-forward="true" selection-start-line="159" selection-start-column="0" selection-end-line="159" selection-end-column="0" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
             <element signature="e#577#1672#0" expanded="false" />
             <element signature="e#1719#2383#0" expanded="false" />
-            <element signature="e#4824#5709#0" expanded="false" />
+            <element signature="e#2510#4760#0" expanded="false" />
           </folding>
         </state>
       </provider>

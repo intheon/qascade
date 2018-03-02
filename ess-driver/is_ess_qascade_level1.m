@@ -172,7 +172,6 @@ if itIsLevel0
         end;
         
         [uniqueTaskMaps, ~, taskMapId] = unique_universal(values(:,2));
-        uniqueTaskMaps = uniqueTaskMaps{1};  % for some reason it is inside a cell
         taskInfoTemplate = studyObj.tasksInfo(1);
         for i=1:length(uniqueTaskMaps)
             taskmap = uniqueTaskMaps{i};
@@ -185,7 +184,6 @@ if itIsLevel0
         end;
         
         [uniqueEventCodeTaskMaps, ~, eventCodeMapId] = unique_universal(values(:,4));
-        uniqueEventCodeTaskMaps = uniqueEventCodeTaskMaps{1}; % for some reason it is inside a cell
         eventCodesInfoTemplate = studyObj.eventCodesInfo;
         for i=1:length(uniqueEventCodeTaskMaps)
             eventmap = uniqueEventCodeTaskMaps{i};

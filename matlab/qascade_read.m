@@ -3,6 +3,8 @@ function [filesMapToKeyValues, issues] = qascade_read(folder, parentKeyValues, f
 % adheres to Qascade schema version 1.0.0
 % returns one key per file, with paths relative to the root container folder ('folder' input argument). 
 % file separators are in the format on which the function is running, i.e. \ for Windows and / for Linux.
+%
+% Copyright 2018 © Intheon
 
 
 

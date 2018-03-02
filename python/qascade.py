@@ -132,31 +132,31 @@ def _make_file_dicts(record, current_folder='', files_dict_array=None, parent_fo
     return files_dict_array
 
 
-def _process_manifest_keys(manifest_dict, issues=None):
+def _process_manifest_keys(manifest_dict_array, issues=None):
 
     """
     Processes an array of dictionaries, each containing (key, value) pairs read from 
-     one level of 
+     one level of manifest files (a subfolder at any depth of the one before it). Applies Qascade directives in order
+     and returns  
 
-    :param record: qascade record
-    :param path: path relative to the root of the Qascade container, empty refers to the root.     
-    :return: the tuple (files, folders)
+    :param manifest_dict_array: an array containing manifest dictionaries, in order (top folder first)
+    :param issues: an array containing issues encountered      
+    :return: the 'compiled' dictionary for the file
     """
-
-    for manifest_key in manifest_dict:
-        is_directive = False
-        for directive in QASCADE_DIRECTIVES:
-            if manifest_key.find('(' + directive) == 0 and manifest_key[-1] == ')':
-                is_directive = True
-                # code goes here
-                break
+    file_final_dict = {}
+    for manifest_item in manifest_dict_array: # go over manifests in the array (each is a dictionary)
+        for key in manifest_item:
+            is_directive = False
+            for directive in QASCADE_DIRECTIVES:
+                if key.find('(' + directive) == 0 and key[-1] == ')':
+                    is_directive = True
+                    # code goes here
+                    break
 
         if not is_directive:
-            for file in files:
-                # files_dict[file]['history'].append # add a record showing which directive in which
-                # manifest file overwrote which key
-                files_dict[file]['key-values'][manifest_key] = manifest_dict[manifest_key]
+            file_final_dict[key] = manifest_item[key]
 
+    return file_final_dict
 
 def process_record(record):
     files_dic_array = _make_file_dicts(record)
