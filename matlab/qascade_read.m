@@ -97,6 +97,7 @@ tableDirective = 'table';
 noSubfolderDirective = 'no-subdir';
 extractDirective = 'extract';
 versionDirective = 'qascade version';
+ignoreDirective = 'ignore'; % ToDo: implement this
 
 onlyThisFolderKeys = newEmptyMap;
 
