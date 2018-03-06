@@ -14,5 +14,9 @@ The main function is `qascade_read()` which is pointed to the root Qascade conta
 
 The output `filesMapToKeyValues` is a MATLAB variable of type container.Map with one key per file path. These file paths are relative to the root container folder with file separators in the format required by the OS on which the function is running, i.e. \ for Windows and / for Linux. The value associated with each of these file paths is also of type container.Map and contains ("key": value) pairs assigned to that file by Qascade.
 
+## Utility functions
+
 The companion utility function `qascade_find()` enables querying for files that contain a certain key (or subkey).
+
+You can also export the list of all files in a Qascade container along with all of their (key: value) pairs (called a `container map`) using qascade_export_container_map() function.
 
