@@ -32,6 +32,7 @@ end;
 if ~exist('fileDirective', 'var')
     fileDirective.match = newEmptyMap;
     fileDirective.extract = newEmptyMap;
+    fileDirective.ignore = {};
 end;
 
 % make sure that folder variable does not have a file separator (since we do not want double file
@@ -111,6 +112,12 @@ for i = 1:length(keys)
             fileDirective.match(matchPattern) = [fileDirective.match(matchPattern); newFolderKeyValues(keys{i})];
         else
             fileDirective.match(matchPattern) = newFolderKeyValues(keys{i});
+        end;
+    elseif strcmp(keys{i}, '(ignore)') % ignore has a cell array of strings that hold patterns that need to be ignored (no pattern is extracted from the directive body itself)        
+        if ischar(newFolderKeyValues(keys{i}))
+            fileDirective.ignore(end+1) = {newFolderKeyValues(keys{i})};
+        elseif iscell(newFolderKeyValues(keys{i}))
+            fileDirective.ignore = [vec(fileDirective.ignore); vec(newFolderKeyValues(keys{i}))];
         end;
     elseif ~isempty(regexp(keys{i}, ['^(' tableDirective '.*\)$'], 'once')) %  ^ in the beginning indices that it has to start with (, $ indicates that it has to end with )
         % table name is not important
@@ -262,28 +269,7 @@ end;
 keys = fileDirective.match.keysInOrder;
 for i=1:length(keys)
     
-    % create full paths but exclude the root folder so it is not used in pattern matching (this
-    % makes the container portable)
-    % fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);
-    % matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
-    
-    % unclear whether relative folder matching works
-    fullPaths = strcat([folder filesep], files);
-    if ~isempty(keys{i}) &&  keys{i}(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
-        [list, isDir] = glob([rootFolder filesep '**' keys{i}]);
-    else % if it starts with / then it is relative to the manifest file folder (not implemented here fully, so checking both root and current folder)
-        [list, isDir] = glob([folder filesep keys{i}]);
-        [list2, isDir2] = glob([rootFolder filesep keys{i}]);
-        list = [list list2];
-        isDir = [isDir isDir2];
-    end;
-    matchIds = ismember(fullPaths, list(~isDir));
-    
-    if any(strcmp(folder, list(isDir))) || any(strcmp([folder filesep], list(isDir)))
-        matchIds(:) = true;
-    end;
-    matchIds = find(matchIds);
-    % assert(isequal(matchIds_old, matchIds));
+   matchIds = glob_matching(rootFolder, folder, files, keys{i});
     
     % overwrite keys when a file name matched wildcard
     for j=1:length(matchIds)
@@ -296,6 +282,25 @@ for i=1:length(keys)
     
 end;
 
+% apply file ignore directives 
+keys = fileDirective.ignore;
+for i=1:length(keys)
+    
+   matchIds = glob_matching(rootFolder, folder, files, keys{i});
+    
+    % overwrite keys when a file name matched wildcard
+    for j=1:length(matchIds)
+        filename = filepathKey(folder,files{matchIds(j)}, rootFolder);
+        
+        % remove filename
+        if isKey(filesMapToKeyValues, {filename})
+            remove(filesMapToKeyValues, {filename});
+            files(strcmp(files, filename)) = [];
+        end;
+            
+    end;
+    
+end;
 
 
 % apply extraction of values for keys matching xyz[key]abc.123 patters
@@ -468,4 +473,33 @@ out = [folder(length(rootFolder)+1:end) filesep filename];
 if out(1) == filesep
     out = out(2:end);
 end;
+end
+
+function matchIds = glob_matching(rootFolder, folder, files, key)
+% matchIds = glob_matching(folder, files, key)
+% used for matching files to glob patterns
+
+
+% create full paths but exclude the root folder so it is not used in pattern matching (this
+% makes the container portable)
+% fullPaths = strcat([folder((length(rootFolder)+1):end) filesep], files);
+% matchIds = find(~cellfun(@isempty, regexp(fullPaths, regexptranslate('wildcard', keys{i})))); % match the full file path, including the name.
+
+% unclear whether relative folder matching works
+fullPaths = strcat([folder filesep], files);
+if ~isempty(key) &&  key(end) ==  '/' % if it end with / then it is anywhere (under the root of the container)
+    [list, isDir] = glob([rootFolder filesep '**' key]);
+else % if it starts with / then it is relative to the manifest file folder (not implemented here fully, so checking both root and current folder)
+    [list, isDir] = glob([folder filesep key]);
+    [list2, isDir2] = glob([rootFolder filesep key]);
+    list = [vec(list); vec(list2)];
+    isDir = [vec(isDir); vec(isDir2)];
+end;
+matchIds = ismember(fullPaths, list(~isDir));
+
+if any(strcmp(folder, list(isDir))) || any(strcmp([folder filesep], list(isDir)))
+    matchIds(:) = true;
+end;
+matchIds = find(matchIds);
+% assert(isequal(matchIds_old, matchIds));
 end

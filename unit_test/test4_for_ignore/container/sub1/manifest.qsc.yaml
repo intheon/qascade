@@ -1,0 +1,6 @@
+(matches *.m):
+   isMFileFromBottom: true
+
+(matches *.*):
+   isMFileFromBottom: false
+

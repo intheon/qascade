@@ -2,12 +2,18 @@
 % for testing, there must be a folder named 'container' and a file named 'correct_read.yaml' in each
 % test folder,'qascade/unit_test'
 
-path = fileparts(mfilename('fullpath'));
+%path = fileparts(mfilename('fullpath'));
+
+path = '/home/nima/Documents/mycode/multi/qascade/unit_test';
+
 d = dir(path);
 allTestsPassed = true;
 for i=3:length(d)
     if d(i).isdir
         containerFolder = [path filesep d(i).name filesep 'container'];
+        
+        fprintf('\n\n\n Processing folder %s  \n\n\n', containerFolder);
+        
         filekvsFullNames = nestd_cell_string_to_cell_string(qascade_read(containerFolder)); 
                 
         % folder separators to unix-style '/'
@@ -17,7 +23,7 @@ for i=3:length(d)
             filekvs(strrep(keys{j}, filesep, '/')) = filekvsFullNames(keys{j});
         end;
         
-        %WriteYaml([path filesep d(i).name filesep 'correct_read.yaml'], filekvs);
+        % WriteYaml([path filesep d(i).name filesep 'correct_read.yaml'], filekvs);
         correctFilekvs = nestd_cell_string_to_cell_string(ReadYamlRawMap([path filesep d(i).name filesep 'correct_read.yaml']));
                 
         if ~isequal(filekvs, correctFilekvs) && isequal(filekvs.keys, correctFilekvs.keys)

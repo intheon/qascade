@@ -1,0 +1,2 @@
+matfile.m: {isMFileFromTop: false}
+sub1/some_matlab_file.m: {isMFileFromBottom: false, isMFileFromTop: false}

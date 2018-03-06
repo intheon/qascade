@@ -1,0 +1,7 @@
+(matches *.m):
+   isMFileFromTop: true
+
+(matches *.*):
+   isMFileFromTop: false
+
+(ignore): ["*.ign", "to_ignore.m"]
