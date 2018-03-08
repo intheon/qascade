@@ -4,7 +4,6 @@ import './index.css';
 import './json-inspector.css';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
-import Inspector from 'react-json-inspector';
 
 var data = {"placeholder":0};
 

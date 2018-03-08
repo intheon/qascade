@@ -256,6 +256,7 @@ end
 if ~isempty(onlyThisFolderKeys)
     fileDirectiveCopy.match = copyMap(fileDirective.match);
     fileDirectiveCopy.extract = copyMap(fileDirective.extract);
+    fileDirectiveCopy.ignore = fileDirective.ignore;
     [onlyThisFolderFilekeys, onlyThisFolderFolderKeys, folderOnlyfileDirective.match, onlyThisFolderKeys] = process_manifest_keys(folder, rootFolder, files, onlyThisFolderKeys, copyMap(filesMapToKeyValues)...
         , copyMap(folderKeyValues), fileDirectiveCopy, manifestFileName, issues);
 end;
